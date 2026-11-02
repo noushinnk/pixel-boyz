@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { ecosystemFeatures } from "./content";
 
 const navItems = ["Mint", "Explore", "Marketplace", "Forge", "Rewards", "Quests", "Activity"];
 const stats = [
@@ -10,12 +11,6 @@ const stats = [
   ["FLOOR PRICE", "—"],
   ["HOLDERS", "—"],
 ];
-export const features = [
-  { icon: "✦", title: "MINT", text: "Claim your place in the universe. Free allocation and public mint phases, powered by BSC." },
-  { icon: "◈", title: "COLLECT", text: "Discover characters with rare traits, evolving levels, and a story still being written." },
-  { icon: "⚡", title: "EVOLVE", text: "Forge your Pixel Boyz, earn XP, and unlock new ways to participate." },
-];
-
 export function SiteShell({ active = "Home", children }: { active?: string; children?: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   return (
@@ -70,7 +65,7 @@ function HomeContent() {
       </div>
     </section>
     <section className="border-y border-white/10 bg-white/[.02]"><div className="mx-auto grid max-w-7xl grid-cols-2 px-5 py-9 md:grid-cols-4 lg:px-8">{stats.map(([label, value]) => <div key={label} className="stat-cell"><div className="font-display text-2xl font-bold sm:text-3xl">{value}</div><div className="mt-2 text-[10px] tracking-[.22em] text-slate-500">{label}</div></div>)}</div></section>
-    <section className="mx-auto max-w-7xl px-5 py-24 lg:px-8"><div className="mb-12 max-w-xl"><div className="eyebrow">THE ECOSYSTEM</div><h2 className="mt-4 font-display text-4xl font-bold uppercase sm:text-5xl">More than a<br /><span className="gradient-text">profile picture.</span></h2></div><div className="grid gap-5 md:grid-cols-3">{features.map((feature) => <div className="feature-card" key={feature.title}><div className="feature-icon">{feature.icon}</div><h3 className="mt-7 font-display text-xl font-bold tracking-widest">{feature.title}</h3><p className="mt-4 leading-7 text-slate-400">{feature.text}</p><span className="mt-8 block text-cyan-300">↗</span></div>)}</div></section>
+    <section className="mx-auto max-w-7xl px-5 py-24 lg:px-8"><div className="mb-12 max-w-xl"><div className="eyebrow">THE ECOSYSTEM</div><h2 className="mt-4 font-display text-4xl font-bold uppercase sm:text-5xl">More than a<br /><span className="gradient-text">profile picture.</span></h2></div><div className="grid gap-5 md:grid-cols-3">{ecosystemFeatures.map((feature) => <div className="feature-card" key={feature.title}><div className="feature-icon">{feature.icon}</div><h3 className="mt-7 font-display text-xl font-bold tracking-widest">{feature.title}</h3><p className="mt-4 leading-7 text-slate-400">{feature.text}</p><span className="mt-8 block text-cyan-300">↗</span></div>)}</div></section>
     <section className="mx-auto max-w-7xl px-5 pb-28 lg:px-8"><div className="rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-[#101d3c] to-[#0d1023] p-8 sm:p-14"><div className="grid items-center gap-8 md:grid-cols-[1fr_auto]"><div><div className="eyebrow">READY PLAYER ONE</div><h2 className="mt-4 font-display text-4xl font-bold uppercase sm:text-5xl">Your character<br /><span className="gradient-text">is waiting.</span></h2></div><Link href="/mint" className="neon-button w-fit">ENTER THE UNIVERSE <span>↗</span></Link></div></div></section>
   </main>;
 }
