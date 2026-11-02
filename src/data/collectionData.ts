@@ -74,10 +74,10 @@ export const INITIAL_NFTS: PixelBoyNFT[] = [
       background: 'Magenta Rift',
       skinTone: '#d97706'
     },
-    isListed: false,
-    price: null,
-    seller: null,
-    highestOffer: null,
+    isListed: true,
+    price: '0.025',
+    seller: '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be',
+    highestOffer: { bidder: '0x8894e0a0c962cb723c1976a4421c95949be2d4e3', amount: '0.020', timestamp: 1730025000 },
     history: [
       { id: 'h2', type: 'mint', from: '0x0000000000000000000000000000000000000000', to: '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be', timestamp: 1730020000, txHash: '0x17173344556677889900aabbccddeeff00112233445566778899aabbccddeeff' }
     ],
@@ -105,10 +105,10 @@ export const INITIAL_NFTS: PixelBoyNFT[] = [
       background: 'Magenta Rift',
       skinTone: '#b45309'
     },
-    isListed: false,
-    price: null,
-    seller: null,
-    highestOffer: null,
+    isListed: true,
+    price: '0.045',
+    seller: '0xd551234ae421e3bcba99a0da6d736074996512e6',
+    highestOffer: { bidder: '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be', amount: '0.035', timestamp: 1730035000 },
     history: [
       { id: 'h3', type: 'mint', from: '0x0000000000000000000000000000000000000000', to: '0xd551234ae421e3bcba99a0da6d736074996512e6', timestamp: 1730030000, txHash: '0x1818556677889900aabbccddeeff00112233445566778899aabbccddeeff0011' }
     ],
@@ -167,10 +167,10 @@ export const INITIAL_NFTS: PixelBoyNFT[] = [
       background: 'Clean Cyber',
       skinTone: '#eab308'
     },
-    isListed: false,
-    price: null,
-    seller: null,
-    highestOffer: null,
+    isListed: true,
+    price: '0.080',
+    seller: '0x8894e0a0c962cb723c1976a4421c95949be2d4e3',
+    highestOffer: { bidder: '0xd551234ae421e3bcba99a0da6d736074996512e6', amount: '0.065', timestamp: 1730055000 },
     history: [
       { id: 'h5', type: 'mint', from: '0x0000000000000000000000000000000000000000', to: '0x8894e0a0c962cb723c1976a4421c95949be2d4e3', timestamp: 1730050000, txHash: '0x353577889900aabbccddeeff00112233445566778899aabbccddeeff00112233' }
     ],

@@ -28,6 +28,11 @@ export const metadata: Metadata = {
     title: 'PIXEL BOYZ — Decentralized NFT Universe',
     description: '10,000 unique characters. One decentralized universe on BNB Smart Chain. Mint, explore, trade, forge, and earn rewards.',
   },
+  icons: {
+    icon: '/assets/aistudio/pixil-frame-0__5__45747249.png',
+    shortcut: '/assets/aistudio/pixil-frame-0__5__45747249.png',
+    apple: '/assets/aistudio/pixil-frame-0__5__45747249.png',
+  },
 };
 
 export default function RootLayout({

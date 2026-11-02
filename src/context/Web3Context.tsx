@@ -20,7 +20,7 @@ import {
 import { createPublicClient, createWalletClient, custom, http, parseEther, formatEther } from 'viem';
 import { bsc } from 'viem/chains';
 import { checkAllowlistEligibility, officialMerkleTree } from '../lib/merkle';
-import { ARCHETYPES, TRAIT_OPTIONS } from '../data/collectionData';
+import { ARCHETYPES, TRAIT_OPTIONS, INITIAL_NFTS, INITIAL_QUESTS } from '../data/collectionData';
 
 interface Web3ContextType {
   // Wallet State
@@ -132,8 +132,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   const [merkleProof, setMerkleProof] = useState<`0x${string}`[]>([]);
 
   // Collection State (Deterministic initial render matching SSR)
-  const [nfts, setNfts] = useState<PixelBoyNFT[]>([]);
-  const [quests, setQuests] = useState<Quest[]>([]);
+  const [nfts, setNfts] = useState<PixelBoyNFT[]>(INITIAL_NFTS);
+  const [quests, setQuests] = useState<Quest[]>(INITIAL_QUESTS);
   const [activity, setActivity] = useState<ActivityEvent[]>([]);
   const [rewardsPoolBnb, setRewardsPoolBnb] = useState<string>('');
 

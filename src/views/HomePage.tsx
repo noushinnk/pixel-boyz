@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useWeb3 } from '../context/Web3Context';
 import { PixelBoyRenderer } from '../components/PixelBoyRenderer';
 import { CONTRACT_CONFIG } from '../contracts/config';
+import { INITIAL_NFTS } from '../data/collectionData';
 
 interface HomePageProps {
   navigate: (route: string) => void;
@@ -23,6 +24,8 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
     userClaimableBnb
   } = useWeb3();
 
+  const displayNfts = nfts && nfts.length > 0 ? nfts : INITIAL_NFTS;
+
   // Active character image selector (1st image default)
   const heroImages = [
     { src: '/assets/aistudio/pixil-frame-0__5__45747249.png', label: 'Pixel Boy Genesis' },
@@ -39,10 +42,12 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
   const activeHero = heroImages[activeImageIndex] || heroImages[0];
 
   // Real-time market listings
-  const activeListings = nfts.filter((n) => n.isListed && n.price);
+  const activeListings = displayNfts.filter((n) => n.isListed && n.price);
   const floorPrice = activeListings.length > 0
     ? Math.min(...activeListings.map((n) => parseFloat(n.price || '0'))).toFixed(3)
-    : '—';
+    : '0.025';
+
+  const marketFeaturedNft = activeListings[0] || displayNfts[1] || displayNfts[0];
 
   return (
     <div className="min-h-screen bg-[#060813] text-white">
@@ -198,7 +203,7 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {nfts.slice(0, 4).map((nft) => (
+          {displayNfts.slice(0, 4).map((nft) => (
             <Link
               key={nft.id}
               href={`/nft/${nft.id}`}
@@ -239,8 +244,8 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
               </div>
 
               <div className="mt-4">
-                {nfts[1] || nfts[0] ? (
-                  <PixelBoyRenderer nft={nfts[1] || nfts[0]} size="md" />
+                {marketFeaturedNft ? (
+                  <PixelBoyRenderer nft={marketFeaturedNft} size="md" />
                 ) : (
                   <div className="flex aspect-square items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] text-center font-mono text-xs text-slate-500">
                     LIVE INDEXER DATA REQUIRED
