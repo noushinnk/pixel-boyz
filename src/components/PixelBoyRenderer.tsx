@@ -78,6 +78,8 @@ export const PixelBoyRenderer: React.FC<PixelBoyRendererProps> = ({
         <img
           src={activeImage}
           alt={nft?.name || 'Pixel Boy'}
+          loading="lazy"
+          decoding="async"
           onError={() => setImageError(true)}
           className="pixel-art absolute inset-0 h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
         />

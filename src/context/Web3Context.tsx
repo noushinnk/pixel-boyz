@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   PixelBoyNFT,
   Quest,
@@ -19,7 +20,6 @@ import {
 } from '../contracts/config';
 import { createPublicClient, createWalletClient, custom, http, parseEther, formatEther } from 'viem';
 import { bsc } from 'viem/chains';
-import { checkAllowlistEligibility, officialMerkleTree } from '../lib/merkle';
 import { ARCHETYPES, TRAIT_OPTIONS, INITIAL_NFTS, INITIAL_QUESTS } from '../data/collectionData';
 
 interface Web3ContextType {
@@ -30,11 +30,6 @@ interface Web3ContextType {
   isConnected: boolean;
   isConnecting: boolean;
   isBinanceAgenticWallet: boolean;
-  allowlistEligibility: {
-    isEligible: boolean;
-    proof: `0x${string}`[];
-    freeRemaining: number;
-  };
 
   is6kMinted: boolean;
 
@@ -66,12 +61,14 @@ interface Web3ContextType {
   publicPhaseOpen: boolean;
   freePhaseClosed: boolean;
   currentMintPriceBnb: string;
-  merkleRoot: string;
   isLiveContractActive: boolean;
 
   // Wallet Specific Quotas
   walletFreeMinted: number;
   walletPaidMinted: number;
+  walletFreeRemaining: number;
+  walletPaidRemaining: number;
+  walletRemaining: number;
   isAgentIdVerified: boolean;
   isAgentIdLoading: boolean;
   xCampaignCompleted: boolean;
@@ -103,6 +100,8 @@ interface Web3ContextType {
 const Web3Context = createContext<Web3ContextType | undefined>(undefined);
 
 export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const pathname = usePathname();
+  const shouldLoadCollection = ['/', '/explore', '/marketplace', '/mint', '/rewards'].includes(pathname);
   const [account, setAccount] = useState<string | null>(null);
   const [chainId, setChainId] = useState<number | null>(BSC_MAINNET_CHAIN_ID);
   const [balanceBnb, setBalanceBnb] = useState<string>('');
@@ -116,7 +115,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   const [freeAllocationRemaining, setFreeAllocationRemaining] = useState<number>(6000);
   const [paidAllocationRemaining, setPaidAllocationRemaining] = useState<number>(4000);
   const [remainingSupply, setRemainingSupply] = useState<number>(10000);
-  const [merkleRoot, setMerkleRoot] = useState<string>('0x0000000000000000000000000000000000000000000000000000000000000000');
   const [freePhaseOpen, setFreePhaseOpen] = useState<boolean>(true);
   const [publicPhaseOpen, setPublicPhaseOpen] = useState<boolean>(true);
   const [freePhaseClosed, setFreePhaseClosed] = useState<boolean>(false);
@@ -125,11 +123,13 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   // Wallet-specific quotas & verifications
   const [walletFreeMinted, setWalletFreeMinted] = useState<number>(0);
   const [walletPaidMinted, setWalletPaidMinted] = useState<number>(0);
+  const [walletFreeRemaining, setWalletFreeRemaining] = useState<number>(0);
+  const [walletPaidRemaining, setWalletPaidRemaining] = useState<number>(0);
+  const [walletRemaining, setWalletRemaining] = useState<number>(0);
   const [isAgentIdVerified, setIsAgentIdVerified] = useState<boolean>(false);
   const [isAgentIdLoading, setIsAgentIdLoading] = useState<boolean>(false);
   const [xCampaignCompleted, setXCampaignCompleted] = useState<boolean>(false);
   const [xCampaignLoading, setXCampaignLoading] = useState<boolean>(false);
-  const [merkleProof, setMerkleProof] = useState<`0x${string}`[]>([]);
 
   // Collection State (Deterministic initial render matching SSR)
   const [nfts, setNfts] = useState<PixelBoyNFT[]>(isContractDeployed('nft') ? [] : INITIAL_NFTS);
@@ -149,12 +149,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     completedQuests: []
   });
 
-  // Check allowlist status of current account
-  const allowlistEligibility = {
-    isEligible: isAgentIdVerified && xCampaignCompleted,
-    proof: merkleProof,
-    freeRemaining: Math.max(0, 2 - walletFreeMinted)
-  };
   const isBinanceAgenticWallet = isAgentIdVerified;
 
   // Real or simulated contract status
@@ -184,18 +178,27 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         setFreeAllocationRemaining(data.freeAllocationRemaining ?? 6000);
         setPaidAllocationRemaining(data.paidAllocationRemaining ?? 4000);
         setRemainingSupply(data.remainingSupply ?? 10000);
-        setCurrentMintPriceBnb(data.mintPriceBnb || '0.001');
+        setCurrentMintPriceBnb(typeof data.mintPriceBnb === 'string' ? data.mintPriceBnb : '0.001');
         setFreePhaseOpen(Boolean(data.freeSaleActive));
         setPublicPhaseOpen(Boolean(data.paidSaleActive));
         setFreePhaseClosed(Boolean(data.freePhaseClosed));
-        setMerkleRoot(data.merkleRoot || '0x0000000000000000000000000000000000000000000000000000000000000000');
 
         if (data.wallet) {
           setIsAgentIdVerified(Boolean(data.wallet.isAgentIdVerified));
           setXCampaignCompleted(Boolean(data.wallet.xCampaignCompleted));
-          if (data.wallet.merkleProof && Array.isArray(data.wallet.merkleProof)) {
-            setMerkleProof(data.wallet.merkleProof);
-          }
+          setWalletFreeMinted(Number(data.wallet.walletFreeMinted ?? 0));
+          setWalletPaidMinted(Number(data.wallet.walletPaidMinted ?? 0));
+          setWalletFreeRemaining(Number(data.wallet.walletFreeRemaining ?? 0));
+          setWalletPaidRemaining(Number(data.wallet.walletPaidRemaining ?? 0));
+          setWalletRemaining(Number(data.wallet.walletRemaining ?? 0));
+        } else {
+          setIsAgentIdVerified(false);
+          setXCampaignCompleted(false);
+          setWalletFreeMinted(0);
+          setWalletPaidMinted(0);
+          setWalletFreeRemaining(0);
+          setWalletPaidRemaining(0);
+          setWalletRemaining(0);
         }
       }
     } catch (err) {
@@ -230,10 +233,11 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [refreshContractData]);
 
   useEffect(() => {
+    if (!shouldLoadCollection) return;
     refreshCollectionData();
     const interval = setInterval(refreshCollectionData, 30000);
     return () => clearInterval(interval);
-  }, [refreshCollectionData]);
+  }, [refreshCollectionData, shouldLoadCollection]);
 
   const verifyAgentIdOnChain = async (): Promise<boolean> => {
     if (!account) return false;
@@ -254,6 +258,14 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAgentIdLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!account) {
+      setIsAgentIdVerified(false);
+      return;
+    }
+    void verifyAgentIdOnChain();
+  }, [account]);
 
   const verifyXCampaignPost = async (postUrl: string) => {
     // Wallet connection is NOT required to submit post link and unlock Agentic Prompt!
@@ -285,7 +297,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     const qty = quantity || 2;
     const contract = CONTRACT_CONFIG.nftAddress || '';
 
-    return `Free-mint ${qty} Pixel Boyz NFTs using only my connected wallet on BNB Chain (56). Contract: ${contract}. First verify wallet/network, Agent ID, unclaimed allocation and live price at https://www.pixelboyz.shop/mint. Don't request proof or X verification, fabricate eligibility, or bypass restrictions. Stop if Agent ID/allocation is insufficient or price is nonzero. Show wallet, eligibility, allocation, price and gas; wait for my explicit approval before signing. Then mint ${qty} and verify the receipt and ownership on BscScan.`;
+    return `Mint ${qty} Pixel Boyz NFT(s) from ${contract} on BNB Chain (56) using only my connected wallet. Read hasAgentId and walletFreeRemaining, then simulate mint(uint256) with the exact payment. This contract requires no proof or X task. Stop unless free quota is available and required value is 0 BNB. Show wallet, eligibility, value and gas; wait for my explicit approval before signing. Verify the receipt and token ownership on BscScan.`;
   };
 
   const getProvider = () => {
@@ -517,26 +529,10 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      // 1. Retrieve latest verified Merkle proof for this wallet from backend
-      let currentProof: `0x${string}`[] = merkleProof;
-      let isAllowlistedFree = false;
-      try {
-        const proofRes = await fetch(`/api/merkle/proof?address=${account}`);
-        if (proofRes.ok) {
-          const pData = await proofRes.json();
-          if (pData.eligible && Array.isArray(pData.proof)) {
-            currentProof = pData.proof;
-            isAllowlistedFree = true;
-          }
-        }
-      } catch (e) {
-        console.warn('Could not refresh proof before mint:', e);
-      }
-
-      // 2. Fetch live contract price, wallet free count, and allocation remaining
+      // The contract decides free eligibility using Agent ID ownership and quota.
       const nftAddress = CONTRACT_CONFIG.nftAddress as `0x${string}`;
       const publicClient = createPublicClient({ chain: bsc, transport: http(CONTRACT_CONFIG.rpcUrl) }) as any;
-      const [priceWei, fMinted, tFree, fActive, fClosed] = await Promise.all([
+      const [priceWei, walletFreeRemaining, walletRemaining] = await Promise.all([
         publicClient.readContract({
           address: nftAddress,
           abi: PIXEL_BOYZ_NFT_ABI as any,
@@ -545,31 +541,22 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         publicClient.readContract({
           address: nftAddress,
           abi: PIXEL_BOYZ_NFT_ABI as any,
-          functionName: 'freeMintedByWallet',
+          functionName: 'walletFreeRemaining',
           args: [account as `0x${string}`]
         }),
         publicClient.readContract({
           address: nftAddress,
           abi: PIXEL_BOYZ_NFT_ABI as any,
-          functionName: 'totalFreeMinted'
-        }),
-        publicClient.readContract({
-          address: nftAddress,
-          abi: PIXEL_BOYZ_NFT_ABI as any,
-          functionName: 'freeSaleActive'
-        }),
-        publicClient.readContract({
-          address: nftAddress,
-          abi: PIXEL_BOYZ_NFT_ABI as any,
-          functionName: 'freePhaseClosed'
+          functionName: 'walletRemaining',
+          args: [account as `0x${string}`]
         })
       ]);
 
-      const walletFreeRemaining = isAllowlistedFree && Boolean(fActive) && !Boolean(fClosed)
-        ? Math.max(0, 2 - Number(fMinted))
-        : 0;
-      const allocationRemaining = Math.max(0, 6000 - Number(tFree));
-      const freeEligibleQty = Math.min(walletFreeRemaining, allocationRemaining);
+      if (quantity > Number(walletRemaining)) {
+        return { success: false, error: `Wallet quota exceeded. You can mint ${walletRemaining} more NFT(s).` };
+      }
+
+      const freeEligibleQty = Number(walletFreeRemaining);
 
       const freeQty = Math.min(quantity, freeEligibleQty);
       const paidQty = quantity - freeQty;
@@ -580,7 +567,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         nftAddress,
         PIXEL_BOYZ_NFT_ABI,
         'mint',
-        [BigInt(quantity), currentProof],
+        [BigInt(quantity)],
         requiredPayment
       );
 
@@ -1054,7 +1041,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         isConnected: Boolean(account),
         isConnecting,
         isBinanceAgenticWallet,
-        allowlistEligibility,
         is6kMinted,
         connectWallet,
         disconnectWallet,
@@ -1079,10 +1065,12 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         publicPhaseOpen,
         freePhaseClosed,
         currentMintPriceBnb,
-        merkleRoot,
         isLiveContractActive,
         walletFreeMinted,
         walletPaidMinted,
+        walletFreeRemaining,
+        walletPaidRemaining,
+        walletRemaining,
         isAgentIdVerified,
         isAgentIdLoading,
         xCampaignCompleted,

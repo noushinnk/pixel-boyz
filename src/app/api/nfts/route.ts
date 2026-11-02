@@ -97,15 +97,19 @@ async function fetchCollection() {
   }));
   const tokenIds = Array.from({ length: Math.min(totalMinted, CONTRACT_CONFIG.totalSupply) }, (_, index) => BigInt(index + 1));
   const liveTokens: Array<{ tokenId: number; owner: string; metadataUri: string }> = [];
-
-  for (let start = 0; start < tokenIds.length; start += 50) {
-    const chunk = tokenIds.slice(start, start + 50);
+  const chunks = Array.from({ length: Math.ceil(tokenIds.length / 100) }, (_, index) =>
+    tokenIds.slice(index * 100, (index + 1) * 100)
+  );
+  const chunkResults = await Promise.all(chunks.map(chunk => {
     const contracts = chunk.flatMap(tokenId => [
       { address, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'ownerOf', args: [tokenId] },
       { address, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'tokenURI', args: [tokenId] }
     ]);
-    const results = await (bscPublicClient.multicall as any)({ contracts, allowFailure: true });
+    return (bscPublicClient.multicall as any)({ contracts, allowFailure: true });
+  }));
 
+  chunks.forEach((chunk, chunkIndex) => {
+    const results = chunkResults[chunkIndex];
     chunk.forEach((tokenId, index) => {
       const ownerResult = results[index * 2];
       const uriResult = results[index * 2 + 1];
@@ -113,10 +117,12 @@ async function fetchCollection() {
       if (String(ownerResult.result).toLowerCase() === ZERO_ADDRESS) return;
       liveTokens.push({ tokenId: Number(tokenId), owner: ownerResult.result, metadataUri: uriResult.result });
     });
-  }
+  });
 
-  const nfts = await Promise.all(liveTokens.map(async token => {
-    const metadata = await fetchMetadata(token.metadataUri);
+  const firstMetadata = liveTokens.length ? await fetchMetadata(liveTokens[0].metadataUri) : null;
+  const metadataAvailable = firstMetadata !== null;
+  const nfts = await Promise.all(liveTokens.map(async (token, index) => {
+    const metadata = index === 0 ? firstMetadata : metadataAvailable ? await fetchMetadata(token.metadataUri) : null;
     return buildNft(token.tokenId, token.owner, token.metadataUri, metadata);
   }));
 

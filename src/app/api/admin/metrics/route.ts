@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/server/db';
-import { MerkleTreeEngine } from '@/lib/server/merkleService';
 import { bscPublicClient } from '@/lib/server/agentIdService';
 import { CONTRACT_CONFIG, PIXEL_BOYZ_NFT_ABI } from '@/contracts/config';
 
@@ -15,26 +14,17 @@ export async function GET(req: Request) {
       totalFreeMinted,
       totalPaidMinted,
       paidAllocation,
-      freeAllocationRemaining,
-      paidAllocationRemaining,
-      remainingSupply,
-      onChainMerkleRoot
+      remainingSupply
     ] = isDeployed ? await Promise.all([
       (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'totalMinted' }).catch(() => 0n),
       (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'totalFreeMinted' }).catch(() => 0n),
       (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'totalPaidMinted' }).catch(() => 0n),
       (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'paidAllocation' }).catch(() => 4000n),
-      (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'freeAllocationRemaining' }).catch(() => 6000n),
-      (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'paidAllocationRemaining' }).catch(() => 4000n),
-      (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'remainingSupply' }).catch(() => 10000n),
-      (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'merkleRoot' }).catch(() => '0x0000000000000000000000000000000000000000000000000000000000000000')
-    ]) : [0n, 0n, 0n, 4000n, 6000n, 4000n, 10000n, '0x0000000000000000000000000000000000000000000000000000000000000000'];
+      (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'remainingSupply' }).catch(() => 10000n)
+    ]) : [0n, 0n, 0n, 4000n, 10000n];
 
     // Database metrics
     const metrics = db.getMetrics();
-    const allowlistWallets = db.getAllActiveAllowlist();
-    const tree = new MerkleTreeEngine(allowlistWallets);
-    const calculatedMerkleRoot = tree.getRoot();
 
     return NextResponse.json({
       onChain: {
@@ -42,15 +32,11 @@ export async function GET(req: Request) {
         totalFreeMinted: Number(totalFreeMinted),
         totalPaidMinted: Number(totalPaidMinted),
         paidAllocation: Number(paidAllocation),
-        freeAllocationRemaining: Number(freeAllocationRemaining),
-        paidAllocationRemaining: Number(paidAllocationRemaining),
-        remainingSupply: Number(remainingSupply),
-        merkleRoot: onChainMerkleRoot as string
+        freeAllocationRemaining: Math.max(0, 6000 - Number(totalFreeMinted)),
+        paidAllocationRemaining: Math.max(0, Number(paidAllocation) - Number(totalPaidMinted)),
+        remainingSupply: Number(remainingSupply)
       },
       offChain: {
-        allowlistCount: allowlistWallets.length,
-        allowlistWallets,
-        calculatedMerkleRoot,
         totalUsers: metrics.totalUsers,
         totalAgentIdVerifications: metrics.totalAgentIdVerifications,
         totalCampaignCompletions: metrics.totalCampaignCompletions

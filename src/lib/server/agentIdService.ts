@@ -22,7 +22,6 @@ export const bscPublicClient = createPublicClient({
 
 // SPACE ID Agent ID (.ai) ERC-721 Registry Contract on BNB Smart Chain
 export const BINANCE_AGENT_ID_REGISTRY_ADDRESS = (
-  process.env.BINANCE_AGENT_ID_REGISTRY_ADDRESS ||
   CONTRACT_CONFIG.registryAddress
 ) as `0x${string}`;
 
@@ -73,22 +72,7 @@ export async function verifyBinanceAgentIdOwnership(walletAddress: string): Prom
 
   const normalized = walletAddress.toLowerCase();
 
-  // Fast path: Check database cache first (instant response)
   const existing = db.getAgentIdVerification(normalized);
-  const now = Date.now();
-  if (existing && (existing.verified || now - existing.checked_at < 5 * 60 * 1000)) {
-    return {
-      isEligible: existing.verified,
-      walletAddress: normalized,
-      balance: existing.verified ? 1 : 0,
-      registryAddress: BINANCE_AGENT_ID_REGISTRY_ADDRESS,
-      checkedAt: existing.checked_at,
-      message: existing.verified
-        ? 'Verified Binance Agent ID holder on BNB Smart Chain.'
-        : 'Wallet does not hold a claimed Binance Agent ID in registry.'
-    };
-  }
-
   try {
     const rawBalance = await (bscPublicClient.readContract as any)({
       address: BINANCE_AGENT_ID_REGISTRY_ADDRESS,

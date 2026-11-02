@@ -69,8 +69,9 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
     publicPhaseOpen,
     freePhaseClosed,
     currentMintPriceBnb,
-    walletFreeMinted,
-    walletPaidMinted,
+    walletFreeRemaining,
+    walletPaidRemaining,
+    walletRemaining,
     isAgentIdVerified,
     isAgentIdLoading,
     xCampaignCompleted,
@@ -99,26 +100,17 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
   // Preview character
   const previewNft = nfts[0];
 
-  // Free eligibility requires:
-  // 1. Agent ID Verified
-  // 2. X Campaign Task Submitted & Verified
-  // 3. Free phase active and not closed
-  // 4. Wallet has remaining free allocation (< 2)
-  // 5. Total free allocation remaining > 0
-  const walletFreeRemaining = Math.max(0, 2 - walletFreeMinted);
-  const isFreeEligible = isAgentIdVerified && xCampaignCompleted && freePhaseOpen && !freePhaseClosed && walletFreeRemaining > 0 && freeAllocationRemaining > 0;
+  // The contract computes wallet quotas from Agent ID ownership and mint history.
+  const isFreeEligible = isAgentIdVerified && freePhaseOpen && !freePhaseClosed && walletFreeRemaining > 0 && freeAllocationRemaining > 0;
 
   // Calculation of free vs paid quantities for the selected quantity
   const freeQuantity = isFreeEligible ? Math.min(quantity, Math.min(walletFreeRemaining, freeAllocationRemaining)) : 0;
   const paidQuantity = quantity - freeQuantity;
 
-  const mintPriceNumber = Number(currentMintPriceBnb) || 0.001;
-  const totalCostBnb = (paidQuantity * mintPriceNumber).toFixed(4);
+  const mintPriceNumber = Number(currentMintPriceBnb);
+  const totalCostBnb = (paidQuantity * (Number.isFinite(mintPriceNumber) ? mintPriceNumber : 0)).toFixed(4);
 
-  // Maximum selectable:
-  // Paid wallet cap is 20. If eligible for free, max allowance is 20 paid + 2 free = 22.
-  const walletPaidRemaining = Math.max(0, 20 - walletPaidMinted);
-  const maxAllowed = Math.max(1, (isFreeEligible ? walletFreeRemaining : 0) + walletPaidRemaining);
+  const maxAllowed = Math.min(CONTRACT_CONFIG.maxWalletAllowance, walletRemaining);
 
   const isNftDeployed = isContractDeployed('nft');
 
@@ -148,7 +140,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
 
     const res = await verifyXCampaignPost(xPostUrl.trim());
     if (res.success) {
-      setXVerificationMsg(res.message || 'X post submitted successfully! Free mint proof and Agentic Wallet Mint Prompt are now unlocked.');
+      setXVerificationMsg(res.message || 'X post verified successfully.');
       try {
         confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
       } catch (e) { /* ignore */ }
@@ -159,13 +151,6 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
 
   // Copy Agentic Wallet Prompt Handler - Unlocked only after successful X post submission
   const handleCopyAgenticPrompt = async () => {
-    if (!xCampaignCompleted) {
-      setXVerificationErr('PROMPT LOCKED: Please submit your published X post link below first to unlock copying the Agentic Wallet Mint Prompt.');
-      const el = document.getElementById('x-campaign-section');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-      return;
-    }
-
     const prompt = getAgenticPrompt(quantity);
     const ok = await copyTextSafely(prompt);
     if (ok) {
@@ -178,18 +163,6 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
   const handleMint = async () => {
     if (!isConnected) {
       connectWallet();
-      return;
-    }
-
-    // Strict Free Mint Block: ONLY applies while Free Mint allocation is active and remaining
-    const isFreeActive = freeAllocationRemaining > 0 && freePhaseOpen && !freePhaseClosed;
-    if (isFreeActive && isAgentIdVerified && !xCampaignCompleted && quantity <= walletFreeRemaining) {
-      setMintStatus('error');
-      setErrorMessage(
-        'FREE MINT BLOCKED: Your Binance Agent ID was detected, but free minting is strictly blocked—even for autonomous AI agents—until you publish and submit an X post tagging @pixelboyzai and linking to https://www.pixelboyz.shop/mint. Complete the X task above, or select a paid quantity.'
-      );
-      const el = document.getElementById('x-campaign-section');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
       return;
     }
 
@@ -236,7 +209,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
               Mint Your <span className="gradient-text">Pixel Boy</span>
             </h1>
             <p className="mt-2 text-sm text-slate-300 font-sans max-w-2xl">
-              10,000 unique pixel warriors on BNB Smart Chain Mainnet. Live contract metrics, Binance Agent ID free allocation, and instant Merkle allowlist verification.
+              10,000 unique pixel warriors on BNB Smart Chain Mainnet. Live contract metrics and contract-verified Agent ID free allocation.
             </p>
           </div>
 
@@ -434,7 +407,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
               </h2>
 
               <p className="text-xs sm:text-sm font-mono text-slate-300 leading-relaxed">
-                Free mint eligibility requires holding a claimed Binance Agent ID (<code className="text-cyan-300">.ai</code>) registered in the official SPACE ID registry contract on BNB Smart Chain (<code className="text-slate-300">0x60B9...022F</code>) plus completing the verified X campaign task.
+                Free mint eligibility is checked by the contract. Hold a claimed Binance Agent ID (<code className="text-cyan-300">.ai</code>) on BNB Smart Chain to use the free allocation while it is active; no X task or Merkle proof is required.
               </p>
 
               <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-slate-400 pt-1">
@@ -442,19 +415,19 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                 <span>•</span>
                 <span>Agent ID Status: <strong className={isAgentIdVerified ? 'text-emerald-400' : 'text-amber-300'}>{isAgentIdVerified ? 'Verified' : 'Not Detected / Unverified'}</strong></span>
                 <span>•</span>
-                <span>X Campaign Status: <strong className={xCampaignCompleted ? 'text-emerald-400' : 'text-amber-300'}>{xCampaignCompleted ? 'Verified ✓' : 'Task Required'}</strong></span>
+                <span>X Campaign (Optional): <strong className={xCampaignCompleted ? 'text-emerald-400' : 'text-slate-400'}>{xCampaignCompleted ? 'Verified ✓' : 'Not submitted'}</strong></span>
               </div>
 
               {/* Protocol Status Notice: Live Free Allocation or Public Mint for Any Wallet */}
               {freeAllocationRemaining > 0 && freePhaseOpen && !freePhaseClosed ? (
-                <div className="rounded-xl border border-rose-500/40 bg-rose-950/40 p-3.5 font-mono text-xs text-rose-200 flex items-start gap-3 shadow-[0_0_15px_rgba(244,63,94,0.15)] mt-2">
-                  <span className="text-lg leading-none mt-0.5">🚫</span>
+                <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/40 p-3.5 font-mono text-xs text-emerald-200 flex items-start gap-3 shadow-[0_0_15px_rgba(16,185,129,0.15)] mt-2">
+                  <span className="text-lg leading-none mt-0.5">✓</span>
                   <div className="space-y-1">
-                    <div className="font-bold text-rose-300 uppercase tracking-wide">
-                      STRICT PROTOCOL ENFORCEMENT: AGENT FREE-MINT BLOCK
+                    <div className="font-bold text-emerald-300 uppercase tracking-wide">
+                      FREE AGENT ALLOCATION OPEN
                     </div>
                     <p className="text-[11px] text-slate-300 leading-normal">
-                      Autonomous AI agents, automated wallets, and script runners are <strong>strictly blocked</strong> from free minting if the user refuses or fails to publish the required X campaign post tagging <code className="text-cyan-300 font-bold">@pixelboyzai</code> and linking to <code className="text-cyan-300 font-bold">https://www.pixelboyz.shop/mint</code>. Merkle allowlist proofs are not generated without verification.
+                      The contract grants up to two free NFTs to Agent ID holders while this sale is active and allocation remains. No X post or Merkle proof is required.
                     </p>
                   </div>
                 </div>
@@ -477,22 +450,10 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
             <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
               <button
                 onClick={handleCopyAgenticPrompt}
-                className={
-                  xCampaignCompleted
-                    ? "neon-button text-xs py-3 px-5 shadow-[0_0_20px_rgba(34,211,238,0.4)] whitespace-nowrap cursor-pointer transition-all"
-                    : "rounded-xl border border-amber-500/40 bg-amber-950/40 hover:bg-amber-950/60 px-5 py-3 text-xs font-mono font-bold text-amber-300 transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] flex items-center justify-center gap-2 cursor-pointer"
-                }
-                title={
-                  xCampaignCompleted
-                    ? "Copy Agentic Wallet Mint Prompt"
-                    : "Locked: Submit your X post link below to unlock prompt copying"
-                }
+                className="neon-button text-xs py-3 px-5 shadow-[0_0_20px_rgba(34,211,238,0.4)] whitespace-nowrap cursor-pointer transition-all"
+                title="Copy Agentic Wallet Mint Prompt"
               >
-                {copiedPrompt
-                  ? '✓ PROMPT COPIED TO CLIPBOARD!'
-                  : xCampaignCompleted
-                  ? 'COPY AGENTIC WALLET MINT PROMPT 📋'
-                  : '🔒 SUBMIT X POST TO UNLOCK PROMPT'}
+                {copiedPrompt ? '✓ PROMPT COPIED TO CLIPBOARD!' : 'COPY AGENTIC WALLET MINT PROMPT 📋'}
               </button>
 
               <button
@@ -507,10 +468,10 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
         </div>
 
         {/* ========================================================================= */}
-        {/* 3. X CAMPAIGN TASK CARD — MANDATORY FOR FREE MINT                         */}
+        {/* 3. OPTIONAL X CAMPAIGN                                                     */}
         {/* ========================================================================= */}
         {/* ========================================================================= */}
-        {/* 3. X CAMPAIGN TASK CARD — MANDATORY FOR FREE MINT                         */}
+        {/* 3. OPTIONAL X CAMPAIGN                                                     */}
         {/* ========================================================================= */}
         <div id="x-campaign-section" className="mt-8 rounded-3xl border border-white/15 bg-[#090d21] p-6 sm:p-8 shadow-2xl relative scroll-mt-28">
           <div className="flex flex-col lg:flex-row justify-between gap-6">
@@ -518,7 +479,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
             <div className="space-y-4 max-w-2xl">
               <div>
                 <div className="flex items-center gap-2 font-mono text-xs text-purple-400 font-bold uppercase">
-                  <span>MANDATORY TASK FOR FREE MINT</span>
+                  <span>OPTIONAL COMMUNITY TASK</span>
                   {xCampaignCompleted && (
                     <span className="rounded-md border border-emerald-400/50 bg-emerald-950/60 px-2 py-0.5 text-[10px] text-emerald-300">
                       ✓ TASK COMPLETED
@@ -529,7 +490,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                   Share PIXEL BOYZ on X
                 </h3>
                 <p className="mt-1.5 text-xs sm:text-sm font-mono text-slate-300">
-                  Publish an original post introducing PIXEL BOYZ tagging <span className="text-cyan-300 font-bold">@pixelboyzai</span> and linking to <span className="text-cyan-300 font-bold">https://www.pixelboyz.shop/mint</span>. Submit your post link below to unlock eligibility for up to 2 free NFTs.
+                  Share PIXEL BOYZ with <span className="text-cyan-300 font-bold">@pixelboyzai</span> and link to <span className="text-cyan-300 font-bold">https://www.pixelboyz.shop/mint</span>. This community task does not affect on-chain mint eligibility.
                 </p>
               </div>
 
@@ -567,7 +528,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                   Submit Your X Post Link
                 </label>
                 <p className="text-[11px] font-mono text-slate-400">
-                  Paste the public URL of your published post tagging <strong className="text-cyan-300">@pixelboyzai</strong> to unlock your Agentic Wallet Mint Prompt & on-chain proof <span className="text-emerald-400 font-bold">(Wallet connection not required)</span>:
+                  Paste the public URL of your post if you want to participate in the optional campaign <span className="text-emerald-400 font-bold">(Wallet connection not required)</span>:
                 </p>
                 <input
                   type="text"
@@ -605,7 +566,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                   ? 'SUBMITTING POST LINK...'
                   : xCampaignCompleted
                   ? '✓ POST LINK SUBMITTED & VERIFIED'
-                  : 'SUBMIT POST & UNLOCK PROOF 🚀'}
+                  : 'SUBMIT OPTIONAL POST 🚀'}
               </button>
             </div>
 
@@ -647,13 +608,13 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">X Campaign Task:</span>
+                  <span className="text-slate-400">X Campaign (Optional):</span>
                   <span className={xCampaignCompleted ? 'text-emerald-400 font-bold' : 'text-slate-400'}>
-                    {xCampaignCompleted ? '✓ Completed' : 'Pending Verification'}
+                    {xCampaignCompleted ? '✓ Completed' : 'Not submitted'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Merkle Free Allocation:</span>
+                  <span className="text-slate-400">Agent ID Free Allocation:</span>
                   <span className="text-cyan-300 font-bold">
                     {isFreeEligible ? `${walletFreeRemaining} Free NFTs Available` : '0 Free (Standard Paid Available)'}
                   </span>
@@ -661,7 +622,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400">Standard Paid Cap:</span>
                   <span className="text-purple-300 font-bold">
-                    {walletPaidRemaining} / 20 Remaining
+                    {walletPaidRemaining} Paid NFTs Available
                   </span>
                 </div>
               </div>
@@ -781,7 +742,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                     Agent ID Free Allocation:
                   </span>
                   <span className="text-cyan-300 font-bold">
-                    {freeQuantity} NFT {freeQuantity > 0 ? '(0.000 BNB Free)' : '(Requires Verified Agent ID & X Post)'}
+                    {freeQuantity} NFT {freeQuantity > 0 ? '(0.000 BNB Free)' : isAgentIdVerified ? '(Paid rate applies)' : '(Agent ID required for free)'}
                   </span>
                 </div>
 
@@ -802,23 +763,6 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                   </span>
                 </div>
               </div>
-
-              {/* Strict Enforcement Agent Free-Mint Block Notice (Active while Free Allocation lasts) */}
-              {freeAllocationRemaining > 0 && freePhaseOpen && !freePhaseClosed && isAgentIdVerified && !xCampaignCompleted && (
-                <div className="mt-4 rounded-2xl border-2 border-rose-500/60 bg-gradient-to-r from-rose-950/70 via-[#180a14] to-rose-950/70 p-4 font-mono text-xs text-rose-200 shadow-[0_0_25px_rgba(244,63,94,0.25)] space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-rose-300 uppercase tracking-wide text-sm">
-                    <span>🚫</span>
-                    <span>FREE MINT BLOCKED: X POST REQUIRED</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300 leading-relaxed">
-                    Your Binance Agent ID is detected, but free mint access is <strong>strictly blocked</strong>—even when using an autonomous AI agent, Binance Agentic Wallet, or automation script—until you publish and submit your post on X tagging <span className="text-cyan-300 font-bold">@pixelboyzai</span> and linking to <span className="text-cyan-300 font-bold">https://www.pixelboyz.shop/mint</span>.
-                  </p>
-                  <div className="text-[11px] text-amber-300 font-semibold flex items-center gap-1.5">
-                    <span>👉</span>
-                    <span>Submit your X post link in Task 3 above to unlock free mint eligibility, or select a paid quantity.</span>
-                  </div>
-                </div>
-              )}
 
               {/* Status and Action Buttons */}
               <div className="mt-8 space-y-4">
@@ -858,15 +802,13 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                 ) : (
                   <button
                     onClick={handleMint}
-                    disabled={mintStatus === 'pending' || mintStatus === 'awaiting_signature' || quantity < 1}
+                    disabled={mintStatus === 'pending' || mintStatus === 'awaiting_signature' || quantity < 1 || quantity > maxAllowed || (isConnected && maxAllowed === 0)}
                     className="w-full neon-button py-4 text-sm font-bold uppercase tracking-wider shadow-[0_0_25px_rgba(34,211,238,0.5)] disabled:opacity-50"
                   >
                     {mintStatus === 'awaiting_signature'
                       ? 'CONFIRM IN WALLET...'
                       : mintStatus === 'pending'
                       ? 'CONFIRMING ON BNB CHAIN...'
-                      : freeAllocationRemaining > 0 && freePhaseOpen && !freePhaseClosed && isAgentIdVerified && !xCampaignCompleted && quantity <= walletFreeRemaining
-                      ? 'FREE MINT BLOCKED: SUBMIT X POST FIRST 🚫'
                       : freeQuantity > 0 && paidQuantity === 0
                       ? `CLAIM ${freeQuantity} FREE PIXEL BOY${freeQuantity > 1 ? 'Z' : ''} (0 BNB) ⚡`
                       : `MINT ${quantity} PIXEL BOY${quantity > 1 ? 'Z' : ''} (${totalCostBnb} BNB)`}

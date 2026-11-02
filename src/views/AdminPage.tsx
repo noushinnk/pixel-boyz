@@ -13,7 +13,6 @@ export function AdminPage({ navigate }: AdminPageProps) {
   const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
-  const [copiedRoot, setCopiedRoot] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'verifications' | 'campaigns' | 'mints' | 'audit'>('overview');
 
   const fetchMetrics = async () => {
@@ -39,12 +38,6 @@ export function AdminPage({ navigate }: AdminPageProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const handleCopyRoot = (root: string) => {
-    navigator.clipboard.writeText(root);
-    setCopiedRoot(true);
-    setTimeout(() => setCopiedRoot(false), 2500);
-  };
-
   const isAdminWallet = account && (
     account.toLowerCase() === CONTRACT_CONFIG.initialOwner.toLowerCase() ||
     account.toLowerCase() === CONTRACT_CONFIG.initialTreasury.toLowerCase()
@@ -65,7 +58,7 @@ export function AdminPage({ navigate }: AdminPageProps) {
               Admin <span className="gradient-text">Dashboard</span>
             </h1>
             <p className="mt-2 text-sm text-slate-300 font-sans max-w-2xl">
-              Real-time monitoring of BNB Chain smart contract state, Merkle allowlist integrity, Binance Agent ID registry verifications, and X campaign task completions.
+              Real-time monitoring of BNB Chain mint state, Agent ID verification, X campaign submissions, and platform activity.
             </p>
           </div>
 
@@ -161,69 +154,28 @@ export function AdminPage({ navigate }: AdminPageProps) {
           </div>
         )}
 
-        {/* Merkle Root Synchronization Card */}
+        {/* Verified Contract Mint Rules */}
         {metrics && (
           <div className="mt-8 rounded-3xl border border-cyan-400/40 bg-[#09152e] p-6 shadow-xl space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-300 block font-bold">
-                  CRYPTOGRAPHIC ALLOWLIST STATUS
-                </span>
-                <h3 className="font-display text-xl font-bold uppercase text-white mt-0.5">
-                  Merkle Root Management & Synchronization
-                </h3>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-slate-400">Eligible Wallets:</span>
-                <span className="rounded-lg border border-cyan-400/50 bg-cyan-400/20 px-2.5 py-1 font-mono text-xs text-cyan-200 font-bold">
-                  {metrics.offChain?.allowlistCount ?? 0} Wallets
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-1.5">
-                <span className="text-slate-400 block text-[11px] uppercase">Currently Installed On-Chain Merkle Root:</span>
-                <code className="text-emerald-400 font-bold block break-all text-xs">
-                  {metrics.onChain?.merkleRoot || '0x0000000000000000000000000000000000000000000000000000000000000000'}
-                </code>
-                <span className="text-[10px] text-slate-500 block">
-                  {metrics.onChain?.merkleRoot === '0x0000000000000000000000000000000000000000000000000000000000000000'
-                    ? 'Root is currently 0x0. Call setMerkleRoot to enable on-chain free claims.'
-                    : 'Active Merkle root on BNB Smart Chain'}
-                </span>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 block text-[11px] uppercase">Calculated Allowlist Merkle Root:</span>
-                  <button
-                    onClick={() => handleCopyRoot(metrics.offChain?.calculatedMerkleRoot)}
-                    className="text-cyan-400 hover:text-cyan-300 text-[10px] underline"
-                  >
-                    {copiedRoot ? '✓ Copied' : 'Copy Root'}
-                  </button>
-                </div>
-                <code className="text-cyan-300 font-bold block break-all text-xs">
-                  {metrics.offChain?.calculatedMerkleRoot || '0x0000000000000000000000000000000000000000000000000000000000000000'}
-                </code>
-                <span className="text-[10px] text-slate-500 block">
-                  Generated from {metrics.offChain?.allowlistCount ?? 0} verified wallets using sorted pair keccak256
-                </span>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 text-[11px] font-mono text-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <span>
-                To install this Merkle root on-chain: Call <code className="text-cyan-300">setMerkleRoot(bytes32 newRoot)</code> on contract <code className="text-slate-200">{CONTRACT_CONFIG.nftAddress}</code> from an account with <code className="text-purple-300">SALE_MANAGER_ROLE</code>.
+            <div>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-300 block font-bold">
+                VERIFIED BNB CHAIN CONTRACT
               </span>
-              <button
-                onClick={() => handleCopyRoot(metrics.offChain?.calculatedMerkleRoot)}
-                className="neon-button text-xs py-2 px-4 whitespace-nowrap self-start sm:self-auto"
-              >
-                {copiedRoot ? '✓ Root Copied' : 'Copy New Root for Contract'}
-              </button>
+              <h3 className="font-display text-xl font-bold uppercase text-white mt-0.5">
+                Agent ID Free Mint
+              </h3>
             </div>
+            <p className="max-w-3xl text-sm font-mono text-slate-300 leading-relaxed">
+              The contract checks Agent ID ownership, sale status, and wallet/collection quotas during <code className="text-cyan-300">mint(uint256 quantity)</code>. Eligible holders receive up to two free NFTs while allocation remains. No Merkle root or X campaign verification is required.
+            </p>
+            <a
+              href={`https://bscscan.com/address/${CONTRACT_CONFIG.nftAddress}#code`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex text-xs font-mono text-cyan-300 hover:text-cyan-200 underline"
+            >
+              View verified contract source on BscScan ↗
+            </a>
           </div>
         )}
 

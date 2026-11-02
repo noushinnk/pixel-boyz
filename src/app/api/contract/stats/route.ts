@@ -3,7 +3,6 @@ import { formatEther, isAddress } from 'viem';
 import { bscPublicClient } from '@/lib/server/agentIdService';
 import { CONTRACT_CONFIG, PIXEL_BOYZ_NFT_ABI } from '@/contracts/config';
 import { db } from '@/lib/server/db';
-import { issueMerkleProof } from '@/lib/server/merkleService';
 
 export const revalidate = 10; // Cache on edge for 10 seconds
 
@@ -32,8 +31,7 @@ const DEFAULT_STATS = {
   mintPriceBnb: '0.001',
   freeSaleActive: true,
   paidSaleActive: true,
-  freePhaseClosed: false,
-  merkleRoot: '0x0000000000000000000000000000000000000000000000000000000000000000'
+  freePhaseClosed: false
 };
 
 async function fetchStatsFromChain(nftAddr: `0x${string}`) {
@@ -48,11 +46,10 @@ async function fetchStatsFromChain(nftAddr: `0x${string}`) {
     (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'mintPrice' }).catch(() => 1000000000000000n),
     (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'freeSaleActive' }).catch(() => true),
     (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'paidSaleActive' }).catch(() => true),
-    (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'freePhaseClosed' }).catch(() => false),
-    (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'merkleRoot' }).catch(() => '0x0000000000000000000000000000000000000000000000000000000000000000')
+    (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'freePhaseClosed' }).catch(() => false)
   ]);
 
-  const [tFree, tPaid, pAlloc, mPrice, fActive, pActive, fClosed, root] = (await Promise.race([
+  const [tFree, tPaid, pAlloc, mPrice, fActive, pActive, fClosed] = (await Promise.race([
     queryPromise,
     timeoutPromise
   ])) as any;
@@ -84,7 +81,6 @@ async function fetchStatsFromChain(nftAddr: `0x${string}`) {
     freeSaleActive: Boolean(fActive),
     paidSaleActive: Boolean(pActive),
     freePhaseClosed: Boolean(fClosed),
-    merkleRoot: root as string,
     timestamp: Date.now()
   };
 }
@@ -116,31 +112,74 @@ export async function GET(req: Request) {
   let walletData = null;
   if (address && isAddress(address)) {
     const normalized = address.toLowerCase();
-    const agentRecord = db.getAgentIdVerification(normalized);
     const campaignRecord = db.getCampaignSubmissionByWallet(normalized);
-
-    const isAgentIdVerified = Boolean(agentRecord?.verified);
     const xCampaignCompleted = Boolean(campaignRecord?.verified);
 
-    // Get Merkle proof if eligible
-    let proof: `0x${string}`[] = [];
-    let isEligible = false;
-    if (isAgentIdVerified && xCampaignCompleted) {
-      const proofRes = await issueMerkleProof(normalized);
-      if (proofRes.eligible) {
-        proof = proofRes.proof;
-        isEligible = true;
-      }
+    let isAgentIdVerified = false;
+    let walletFreeMinted = 0;
+    let walletPaidMinted = 0;
+    let walletFreeRemaining = 0;
+    let walletPaidRemaining = 0;
+    let walletRemaining = 0;
+    try {
+      const [hasAgentId, freeMinted, paidMinted, freeRemaining, paidRemaining, totalRemaining] = await Promise.all([
+        (bscPublicClient.readContract as any)({
+          address: nftAddr,
+          abi: PIXEL_BOYZ_NFT_ABI,
+          functionName: 'hasAgentId',
+          args: [normalized]
+        }),
+        (bscPublicClient.readContract as any)({
+          address: nftAddr,
+          abi: PIXEL_BOYZ_NFT_ABI,
+          functionName: 'freeMintedByWallet',
+          args: [normalized]
+        }),
+        (bscPublicClient.readContract as any)({
+          address: nftAddr,
+          abi: PIXEL_BOYZ_NFT_ABI,
+          functionName: 'paidMintedByWallet',
+          args: [normalized]
+        }),
+        (bscPublicClient.readContract as any)({
+          address: nftAddr,
+          abi: PIXEL_BOYZ_NFT_ABI,
+          functionName: 'walletFreeRemaining',
+          args: [normalized]
+        }),
+        (bscPublicClient.readContract as any)({
+          address: nftAddr,
+          abi: PIXEL_BOYZ_NFT_ABI,
+          functionName: 'walletPaidRemaining',
+          args: [normalized]
+        }),
+        (bscPublicClient.readContract as any)({
+          address: nftAddr,
+          abi: PIXEL_BOYZ_NFT_ABI,
+          functionName: 'walletRemaining',
+          args: [normalized]
+        })
+      ]);
+      isAgentIdVerified = Boolean(hasAgentId);
+      walletFreeMinted = Number(freeMinted);
+      walletPaidMinted = Number(paidMinted);
+      walletFreeRemaining = Number(freeRemaining);
+      walletPaidRemaining = Number(paidRemaining);
+      walletRemaining = Number(totalRemaining);
+    } catch (error) {
+      console.warn('Could not read wallet mint status from contract:', error);
     }
 
     walletData = {
       address: normalized,
       isAgentIdVerified,
       xCampaignCompleted,
-      isEligible,
-      merkleProof: proof,
-      walletFreeMinted: 0,
-      walletPaidMinted: 0
+      isEligible: isAgentIdVerified && walletFreeRemaining > 0 && Boolean(stats.freeSaleActive) && !Boolean(stats.freePhaseClosed),
+      walletFreeMinted,
+      walletPaidMinted,
+      walletFreeRemaining,
+      walletPaidRemaining,
+      walletRemaining
     };
   }
 
