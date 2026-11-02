@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import confetti from 'canvas-confetti';
 import { useWeb3 } from '../context/Web3Context';
 import { CONTRACT_CONFIG } from '../contracts/config';
 
@@ -29,101 +28,30 @@ export const RewardsPage: React.FC<RewardsPageProps> = ({ navigate }) => {
   const currentEpoch = 4;
   const isEpochAlreadyClaimed = userProfile.claimedEpochs.includes(currentEpoch);
 
-  const handleClaim = async () => {
-    if (!isConnected) {
-      connectWallet();
-      return;
-    }
-
-    setClaiming(true);
-    setClaimFeedback(null);
-
-    const res = await claimRewardsPool(currentEpoch);
-    setClaiming(false);
-
-    if (res.success) {
-      setClaimFeedback(`Claim verified! ${res.amountBnb} BNB sent to your wallet.`);
-      try {
-        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
-      } catch (e) { /* ignore */ }
-    } else {
-      setClaimFeedback(`Claim error: ${res.error}`);
-    }
+  const handleClaim = () => {
+    setClaimFeedback('Coming soon — rewards are currently read-only.');
   };
 
-  const myCollectionItems = [
-    {
-      title: 'NEXUS FRONTIER',
-      category: 'Online Co-op Shooter',
-      progress: 72,
-      image: '/assets/aistudio/17_01ef732d.png',
-      color: 'from-purple-600 to-indigo-600'
-    },
-    {
-      title: 'SHADOW ORIGINS',
-      category: 'Stealth Action',
-      progress: 58,
-      image: '/assets/aistudio/18_6d72f8ce.png',
-      color: 'from-amber-600 to-red-600'
-    },
-    {
-      title: 'GALAXY RACERS',
-      category: 'Arcade Racing',
-      progress: 91,
-      image: '/assets/aistudio/26_95acd707.png',
-      color: 'from-emerald-600 to-cyan-600'
-    },
-    {
-      title: 'ARCANE REALM',
-      category: 'Magic Adventure',
-      progress: 63,
-      image: '/assets/aistudio/35_3bc87fd1.png',
-      color: 'from-pink-600 to-purple-600'
-    }
-  ];
-
-  const recentActivities = [
-    {
-      title: 'HEADSHOT CHAMPION',
-      desc: 'Get 50 headshots',
-      progress: '42 / 50',
-      time: '2h ago',
-      color: 'border-cyan-400 text-cyan-300 bg-cyan-950/30',
-      icon: '🎯'
-    },
-    {
-      title: 'LOOT HUNTER',
-      desc: 'Open 20 crates',
-      progress: '13 / 20',
-      time: '5h ago',
-      color: 'border-amber-400 text-amber-300 bg-amber-950/30',
-      icon: '🏆'
-    },
-    {
-      title: 'TEAM PLAYER',
-      desc: 'Play 5 matches in a squad',
-      progress: '3 / 5',
-      time: 'Yesterday',
-      color: 'border-emerald-400 text-emerald-300 bg-emerald-950/30',
-      icon: '🤝'
-    },
-    {
-      title: 'DAILY WARRIOR',
-      desc: 'Complete 3 daily challenges',
-      progress: '2 / 3',
-      time: 'Yesterday',
-      color: 'border-purple-400 text-purple-300 bg-purple-950/30',
-      icon: '⭐'
-    }
-  ];
-
-  const achievements = [
-    { title: 'RAPID STRIKE', xp: '25 XP', icon: '⚡', color: 'border-cyan-400 text-cyan-300' },
-    { title: 'SURVIVOR', xp: '50 XP', icon: '🛡️', color: 'border-amber-400 text-amber-300' },
-    { title: 'TREASURE SEEKER', xp: '30 XP', icon: '💎', color: 'border-emerald-400 text-emerald-300' },
-    { title: 'MASTER TACTICIAN', xp: '40 XP', icon: '👑', color: 'border-purple-400 text-purple-300' },
-    { title: 'UNSTOPPABLE', xp: '60 XP', icon: '🔥', color: 'border-red-400 text-red-300' }
-  ];
+  const myCollectionItems: Array<{
+    title: string;
+    category: string;
+    progress: number;
+    image: string;
+  }> = [];
+  const recentActivities: Array<{
+    title: string;
+    desc: string;
+    progress: string;
+    time: string;
+    color: string;
+    icon: string;
+  }> = [];
+  const achievements: Array<{
+    title: string;
+    xp: string;
+    icon: string;
+    color: string;
+  }> = [];
 
   return (
     <div className="min-h-screen bg-[#070914] text-white pt-24 pb-20 selection:bg-purple-500/30 selection:text-purple-200">
@@ -171,7 +99,8 @@ export const RewardsPage: React.FC<RewardsPageProps> = ({ navigate }) => {
                         key={item.label}
                         onClick={() => {
                           setActiveTab(item.label as any);
-                          navigate(item.route);
+                          if (item.label === 'Dashboard') navigate(item.route);
+                          else setClaimFeedback('Coming soon');
                         }}
                         className={`flex items-center gap-3 w-full rounded-2xl px-4 py-3 text-left font-mono text-xs transition-all ${
                           isActive
@@ -194,8 +123,8 @@ export const RewardsPage: React.FC<RewardsPageProps> = ({ navigate }) => {
                     🛡️
                   </div>
                   <div>
-                    <span className="text-white font-bold text-xs block">Level 28</span>
-                    <span className="text-[10px] text-slate-400">Rank: Legend</span>
+                    <span className="text-white font-bold text-xs block">—</span>
+                    <span className="text-[10px] text-slate-400">LIVE PROFILE DATA REQUIRED</span>
                   </div>
                 </div>
 
@@ -293,10 +222,10 @@ export const RewardsPage: React.FC<RewardsPageProps> = ({ navigate }) => {
                       <div className="flex items-center gap-3 pt-3">
                         <button
                           onClick={handleClaim}
-                          disabled={claiming || isEpochAlreadyClaimed}
+                          disabled
                           className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider text-white shadow-[0_0_25px_rgba(168,85,247,0.5)] hover:brightness-110 transition-all disabled:opacity-50"
                         >
-                          {claiming ? 'VERIFYING CLAIM...' : isEpochAlreadyClaimed ? '✓ EPOCH 04 CLAIMED' : `▶ CLAIM ${userClaimableBnb} BNB`}
+                          COMING SOON
                         </button>
                         <button
                           onClick={() => navigate('/quests')}
@@ -454,19 +383,19 @@ export const RewardsPage: React.FC<RewardsPageProps> = ({ navigate }) => {
                       {/* 4 Stats: Play Time, Games, Achievements, Score */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-center sm:text-right pt-2 sm:pt-0 w-full sm:w-auto">
                         <div className="rounded-xl bg-white/[0.02] sm:bg-transparent p-2 sm:p-0">
-                          <span className="font-display text-sm sm:text-base font-bold text-white block">128h 45m</span>
+                          <span className="font-display text-sm sm:text-base font-bold text-white block">—</span>
                           <span className="text-[9px] text-slate-400 uppercase">Play Time</span>
                         </div>
                         <div className="rounded-xl bg-white/[0.02] sm:bg-transparent p-2 sm:p-0">
-                          <span className="font-display text-sm sm:text-base font-bold text-white block">47</span>
+                          <span className="font-display text-sm sm:text-base font-bold text-white block">—</span>
                           <span className="text-[9px] text-slate-400 uppercase">Operatives</span>
                         </div>
                         <div className="rounded-xl bg-white/[0.02] sm:bg-transparent p-2 sm:p-0">
-                          <span className="font-display text-sm sm:text-base font-bold text-white block">320</span>
+                          <span className="font-display text-sm sm:text-base font-bold text-white block">—</span>
                           <span className="text-[9px] text-slate-400 uppercase">Achievements</span>
                         </div>
                         <div className="rounded-xl bg-white/[0.02] sm:bg-transparent p-2 sm:p-0">
-                          <span className="font-display text-sm sm:text-base font-bold text-white block">4.2K</span>
+                          <span className="font-display text-sm sm:text-base font-bold text-white block">—</span>
                           <span className="text-[9px] text-slate-400 uppercase">Score</span>
                         </div>
                       </div>
@@ -481,7 +410,7 @@ export const RewardsPage: React.FC<RewardsPageProps> = ({ navigate }) => {
                       </div>
                       <div>
                         <span className="text-[9px] text-slate-400 uppercase block">TOP STAKED PROTOCOL</span>
-                        <span className="font-display font-bold text-white text-xs">NEXUS FRONTIER</span>
+                        <span className="font-display font-bold text-white text-xs">LIVE INDEXER DATA REQUIRED</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -511,8 +440,8 @@ export const RewardsPage: React.FC<RewardsPageProps> = ({ navigate }) => {
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h5 className="font-display font-bold text-white text-xs">VOID RUNNERS</h5>
-                          <span className="text-[10px] text-slate-400">Battle Royale · Block Sync</span>
+                          <h5 className="font-display font-bold text-white text-xs">ON-CHAIN INDEXER</h5>
+                          <span className="text-[10px] text-slate-400">Live synchronization unavailable</span>
                         </div>
                         <button
                           onClick={() => setDownloadPaused(!downloadPaused)}
@@ -527,9 +456,9 @@ export const RewardsPage: React.FC<RewardsPageProps> = ({ navigate }) => {
                           <div className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 w-[43%]" />
                         </div>
                         <div className="flex items-center justify-between text-[10px] text-slate-400">
-                          <span>24.6 GB / 56.8 GB</span>
-                          <span>18.7 MB/s</span>
-                          <span className="text-purple-300 font-bold">43%</span>
+                          <span>—</span>
+                          <span>—</span>
+                          <span className="text-purple-300 font-bold">—</span>
                         </div>
                       </div>
                     </div>

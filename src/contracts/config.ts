@@ -20,24 +20,24 @@ export const CONTRACT_CONFIG = {
   bscScanUrl: getEnv('BSCSCAN_URL', 'https://bscscan.com'),
   assetBaseUrl: getEnv('ASSET_BASE_URL', 'https://assets.pixelboyz.io'),
   
-  // Contract Addresses (configured via env or null when pending deployment)
-  nftAddress: getEnv('NFT_CONTRACT_ADDRESS', ''),
-  marketplaceAddress: getEnv('MARKETPLACE_CONTRACT_ADDRESS', ''),
-  forgeAddress: getEnv('FORGE_CONTRACT_ADDRESS', ''),
-  rewardsAddress: getEnv('REWARDS_CONTRACT_ADDRESS', ''),
+  // Contract Addresses (environment values override the recorded deployment)
+  nftAddress: getEnv('NFT_CONTRACT_ADDRESS', '0xdD9941fFADE1eBb7b3E46Fe979143945203EFA97'),
+  marketplaceAddress: getEnv('MARKETPLACE_CONTRACT_ADDRESS', '0xF849a3Eb62f76597eDec523Cb29dd436B1bd5ca1'),
+  forgeAddress: getEnv('FORGE_CONTRACT_ADDRESS', '0x53142E20019453f5901A7b5481E223ABD27bC5B6'),
+  rewardsAddress: getEnv('REWARDS_CONTRACT_ADDRESS', '0xb163117921464bcBb9D8ed209CE7B1234bD50B4b'),
   
   // Protocol Parameters
   totalSupply: 10000,
   freeAllocation: 6000,
   paidAllocation: 4000,
-  mintPriceBnb: '0.001',
+  mintPriceBnb: '',
   freeMintLimitPerWallet: 2,
   paidMintLimitPerWallet: 20,
   maxWalletAllowance: 22, // 2 free + 20 paid
   marketplaceFeePercent: 2.5,
   royaltyPercent: 5.0,
   forgeXpRequirement: 100,
-  forgeBnbCost: '0.005', // Optional upgrade stabilizer cost in BNB
+  forgeBnbCost: '', // The deployed Forge recipe determines the fee.
 };
 
 // Check if live contract addresses are configured
@@ -125,38 +125,74 @@ export const PIXEL_BOYZ_NFT_ABI = [
     inputs: [],
     outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'mintPrice',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'totalFreeMinted',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'totalPaidMinted',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'approve',
+    inputs: [
+      { name: 'to', type: 'address' },
+      { name: 'tokenId', type: 'uint256' }
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable'
   }
 ] as const;
 
 export const MARKETPLACE_ABI = [
   {
     type: 'function',
-    name: 'createListing',
+    name: 'list',
     inputs: [
+      { name: 'nft', type: 'address' },
       { name: 'tokenId', type: 'uint256' },
-      { name: 'priceInWei', type: 'uint256' }
+      { name: 'price', type: 'uint256' }
     ],
     outputs: [],
     stateMutability: 'nonpayable'
   },
   {
     type: 'function',
-    name: 'buyToken',
-    inputs: [{ name: 'tokenId', type: 'uint256' }],
+    name: 'buy',
+    inputs: [{ name: 'listingId', type: 'uint256' }],
     outputs: [],
     stateMutability: 'payable'
   },
   {
     type: 'function',
     name: 'cancelListing',
-    inputs: [{ name: 'tokenId', type: 'uint256' }],
+    inputs: [{ name: 'listingId', type: 'uint256' }],
     outputs: [],
     stateMutability: 'nonpayable'
   },
   {
     type: 'function',
-    name: 'createOffer',
-    inputs: [{ name: 'tokenId', type: 'uint256' }],
+    name: 'makeOffer',
+    inputs: [
+      { name: 'nft', type: 'address' },
+      { name: 'tokenId', type: 'uint256' },
+      { name: 'expiry', type: 'uint64' }
+    ],
     outputs: [],
     stateMutability: 'payable'
   },
@@ -164,8 +200,7 @@ export const MARKETPLACE_ABI = [
     type: 'function',
     name: 'acceptOffer',
     inputs: [
-      { name: 'tokenId', type: 'uint256' },
-      { name: 'bidder', type: 'address' }
+      { name: 'offerId', type: 'uint256' }
     ],
     outputs: [],
     stateMutability: 'nonpayable'
@@ -175,10 +210,10 @@ export const MARKETPLACE_ABI = [
 export const FORGE_ABI = [
   {
     type: 'function',
-    name: 'forgeCharacters',
+    name: 'forge',
     inputs: [
-      { name: 'tokenA', type: 'uint256' },
-      { name: 'tokenB', type: 'uint256' }
+      { name: 'upgradedTokenId', type: 'uint256' },
+      { name: 'burnedTokenIds', type: 'uint256[]' }
     ],
     outputs: [{ name: 'newTokenId', type: 'uint256' }],
     stateMutability: 'payable'
@@ -195,7 +230,7 @@ export const FORGE_ABI = [
 export const REWARDS_ABI = [
   {
     type: 'function',
-    name: 'claimReward',
+    name: 'claim',
     inputs: [
       { name: 'epoch', type: 'uint256' },
       { name: 'amount', type: 'uint256' },
@@ -206,9 +241,14 @@ export const REWARDS_ABI = [
   },
   {
     type: 'function',
-    name: 'getPoolBalance',
-    inputs: [],
-    outputs: [{ name: '', type: 'uint256' }],
+    name: 'epochs',
+    inputs: [{ name: 'epochId', type: 'uint256' }],
+    outputs: [
+      { name: 'merkleRoot', type: 'bytes32' },
+      { name: 'allocation', type: 'uint256' },
+      { name: 'claimed', type: 'uint256' },
+      { name: 'exists', type: 'bool' }
+    ],
     stateMutability: 'view'
   }
 ] as const;

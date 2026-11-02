@@ -41,7 +41,7 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
   const activeListings = nfts.filter((n) => n.isListed && n.price);
   const floorPrice = activeListings.length > 0
     ? Math.min(...activeListings.map((n) => parseFloat(n.price || '0'))).toFixed(3)
-    : '0.001';
+    : '—';
 
   return (
     <div className="min-h-screen bg-[#060813] text-white">
@@ -89,8 +89,8 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6 pt-5 border-t border-white/10 text-xs font-mono">
               <div className="rounded-xl bg-white/[0.02] p-2.5 sm:p-0 sm:bg-transparent">
                 <div className="text-slate-500 uppercase tracking-widest text-[9px] sm:text-[10px]">Mint Price</div>
-                <div className="mt-0.5 font-display text-lg sm:text-xl font-bold text-white">0.001 BNB</div>
-                <div className="text-[9px] sm:text-[10px] text-cyan-400 font-bold truncate">2 Free (Agentic Wallet)</div>
+                <div className="mt-0.5 font-display text-lg sm:text-xl font-bold text-white">—</div>
+                <div className="text-[9px] sm:text-[10px] text-slate-400 font-bold truncate">READ FROM CONTRACT</div>
               </div>
               <div className="rounded-xl bg-white/[0.02] p-2.5 sm:p-0 sm:bg-transparent">
                 <div className="text-slate-500 uppercase tracking-widest text-[9px] sm:text-[10px]">Free Allocation</div>

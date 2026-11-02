@@ -45,7 +45,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
       });
   }, [nfts, searchQuery, selectedRarity, sortBy]);
 
-  const activeFloor = '0.001';
+  const activeFloor = '—';
 
   return (
     <div className="min-h-screen bg-[#070913] text-white pt-24 pb-24 selection:bg-pink-500/30 selection:text-pink-200">
@@ -99,7 +99,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
               <div className="text-[11px] uppercase tracking-wider text-slate-400 mt-0.5">Total Supply</div>
             </div>
             <div className="border-r border-white/10 pr-4">
-              <div className="font-display text-2xl sm:text-3xl font-black text-cyan-300">{activeFloor} BNB</div>
+              <div className="font-display text-2xl sm:text-3xl font-black text-cyan-300">{activeFloor}</div>
               <div className="text-[11px] uppercase tracking-wider text-slate-400 mt-0.5">Floor Price</div>
             </div>
             <div className="border-r border-white/10 pr-4">
@@ -222,7 +222,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
                   <span className="text-[10px] uppercase tracking-wider text-slate-400 block">Current Price</span>
                   <div className="flex items-baseline gap-2">
                     <span className="font-display text-2xl font-bold text-white">
-                      {featuredNft.price ? `${featuredNft.price} BNB` : '0.001 BNB'}
+                      {featuredNft.price ? `${featuredNft.price} BNB` : '—'}
                     </span>
                     <span className="text-xs text-slate-500">($0.65 USD)</span>
                   </div>
@@ -245,7 +245,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
                   <span className="inline-block h-5 w-5 rounded-full bg-purple-500 border border-black" />
                   <span className="inline-block h-5 w-5 rounded-full bg-pink-500 border border-black" />
                 </span>
-                <span>47 people are watching this drop</span>
+                <span>LIVE WATCHER DATA UNAVAILABLE</span>
               </div>
             </div>
           </div>
@@ -365,7 +365,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
                     <div>
                       <span className="text-[9px] text-slate-500 block uppercase">Price</span>
                       <span className="font-bold text-cyan-300">
-                        {nft.price ? `${nft.price} BNB` : `${activeFloor} BNB`}
+                        {nft.price ? `${nft.price} BNB` : activeFloor}
                       </span>
                     </div>
 
@@ -462,7 +462,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 text-center space-y-2">
               <div className="text-2xl">⚡</div>
               <h5 className="font-display font-bold text-white">3. Mint / Purchase</h5>
-              <p className="text-[11px] text-slate-400 font-sans">Claim 2 free (Agentic) or mint at 0.001 BNB with instant settlement.</p>
+              <p className="text-[11px] text-slate-400 font-sans">Mint pricing and availability are read from the deployed contract.</p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 text-center space-y-2">

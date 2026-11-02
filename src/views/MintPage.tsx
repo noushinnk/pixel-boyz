@@ -46,7 +46,9 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
   // ONLY agentic wallets get free mints. Others get 0 free mints.
   const freeQuantity = isAgenticEligible ? Math.min(quantity, freeRemaining) : 0;
   const paidQuantity = quantity - freeQuantity;
-  const totalCostBnb = (paidQuantity * parseFloat(currentMintPriceBnb)).toFixed(4);
+  const totalCostBnb = currentMintPriceBnb
+    ? (paidQuantity * parseFloat(currentMintPriceBnb)).toFixed(4)
+    : '—';
 
   // Maximum selectable
   const maxAllowed = isAgenticEligible ? CONTRACT_CONFIG.maxWalletAllowance : CONTRACT_CONFIG.paidMintLimitPerWallet;
@@ -130,7 +132,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
               Mint Your <span className="gradient-text">Pixel Boy</span>
             </h1>
             <p className="mt-2 text-sm text-slate-300 font-sans max-w-2xl">
-              Genesis ERC-721 collection on BNB Smart Chain. 6,000 free allocation reserved for verified Binance Agentic Wallets (2 Free Mints each). Standard wallets mint at 0.001 BNB.
+              Genesis ERC-721 collection on BNB Smart Chain. Mint availability and pricing are read directly from the deployed contract.
             </p>
           </div>
 
@@ -202,11 +204,11 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                     <span>AGENTIC WALLET EXCLUSIVE BENEFIT</span>
                   </div>
                   <p className="text-xs font-mono text-slate-300">
-                    <strong className="text-cyan-300">Binance Agentic Wallets</strong> are granted <strong>2 FREE MINTS</strong> via on-chain Merkle proof. Other/standard wallets mint at the official price of <strong>0.001 BNB</strong> per character.
+                    <strong className="text-cyan-300">Eligible wallets</strong> receive free allocation through the configured on-chain Merkle root. All other pricing is read from the deployed contract.
                   </p>
                   {isConnected && (
                     <p className="text-[11px] font-mono text-slate-400">
-                      Current wallet <code className="text-slate-200">{account?.slice(0, 6)}...{account?.slice(-4)}</code> is not an Agentic Wallet. Your mints will be processed at 0.001 BNB.
+                      Current wallet <code className="text-slate-200">{account?.slice(0, 6)}...{account?.slice(-4)}</code> is not eligible for the configured free allocation.
                     </p>
                   )}
                 </div>
@@ -265,7 +267,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                   <span className="text-purple-300 font-bold">
                     {paidMintedCount.toLocaleString()} / {CONTRACT_CONFIG.paidAllocation.toLocaleString()}
                   </span>
-                  <span className="text-[10px] text-slate-500 block">0.001 BNB · Others</span>
+                  <span className="text-[10px] text-slate-500 block">CONTRACT PRICE</span>
                 </div>
               </div>
             </div>
@@ -309,7 +311,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                         </span>
                       ) : (
                         <span className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-1 font-mono text-[11px] text-slate-400">
-                          STANDARD WALLET (0.001 BNB)
+                          STANDARD WALLET
                         </span>
                       )}
                     </div>
@@ -391,7 +393,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                     Standard Mint Quantity
                   </span>
                   <span className="text-purple-300 font-bold">
-                    {paidQuantity} NFT × 0.001 BNB
+                    {paidQuantity} NFT × {currentMintPriceBnb || '—'} BNB
                   </span>
                 </div>
 

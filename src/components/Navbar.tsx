@@ -442,7 +442,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                   <span className="text-xl">👛</span>
                   <div className="text-left">
                     <span className="font-bold text-slate-200 block">Standard Web3 Wallet</span>
-                    <span className="text-[10px] text-slate-400">Paid Public Mint (0.001 BNB)</span>
+                    <span className="text-[10px] text-slate-400">Paid Public Mint (contract price)</span>
                   </div>
                 </div>
                 <span className="text-slate-400 text-xs">Connect →</span>

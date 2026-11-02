@@ -12,8 +12,13 @@ import {
 import {
   CONTRACT_CONFIG,
   BSC_MAINNET_CHAIN_ID,
-  isContractDeployed
+  isContractDeployed,
+  PIXEL_BOYZ_NFT_ABI,
+  MARKETPLACE_ABI,
+  FORGE_ABI
 } from '../contracts/config';
+import { createPublicClient, createWalletClient, custom, http, parseEther, formatEther } from 'viem';
+import { bsc } from 'viem/chains';
 import { checkAllowlistEligibility, officialMerkleTree } from '../lib/merkle';
 import { ARCHETYPES, TRAIT_OPTIONS } from '../data/collectionData';
 
@@ -115,7 +120,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   const isLiveContractActive = isContractDeployed('nft');
 
   // Total calculations (100% Real, zero demo additions)
-  const totalMinted = 0;
+  const [totalMinted, setTotalMinted] = useState(0);
   const freeMintedCount = nfts.filter(n => n.history.some(h => h.type === 'mint' && (!h.price || h.price === '0' || h.price === '0.000'))).length;
   const paidMintedCount = nfts.filter(n => n.history.some(h => h.type === 'mint' && Number(h.price) > 0)).length;
 
@@ -125,6 +130,71 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   // Calculate user's claimable BNB based on their XP share
   const userClaimableBnb = '';
   const liveConfigurationError = 'This action is unavailable until deployed contracts and the indexer are configured.';
+
+  useEffect(() => {
+    const publicClient = createPublicClient({ chain: bsc, transport: http(CONTRACT_CONFIG.rpcUrl) }) as any;
+    void Promise.all([
+      publicClient.readContract({
+        address: CONTRACT_CONFIG.nftAddress as `0x${string}`,
+        abi: PIXEL_BOYZ_NFT_ABI as any,
+        functionName: 'mintPrice'
+      }),
+      publicClient.readContract({
+        address: CONTRACT_CONFIG.nftAddress as `0x${string}`,
+        abi: PIXEL_BOYZ_NFT_ABI as any,
+        functionName: 'totalMinted'
+      }),
+      publicClient.readContract({
+        address: CONTRACT_CONFIG.nftAddress as `0x${string}`,
+        abi: PIXEL_BOYZ_NFT_ABI as any,
+        functionName: 'freeSaleActive'
+      }),
+      publicClient.readContract({
+        address: CONTRACT_CONFIG.nftAddress as `0x${string}`,
+        abi: PIXEL_BOYZ_NFT_ABI as any,
+        functionName: 'paidSaleActive'
+      })
+    ]).then(([price, minted, freeActive, paidActive]) => {
+      setCurrentMintPriceBnb(formatEther(price as bigint));
+      setTotalMinted(Number(minted));
+      setFreePhaseOpen(Boolean(freeActive));
+      setPublicPhaseOpen(Boolean(paidActive));
+    }).catch(() => {
+      setCurrentMintPriceBnb('');
+    });
+  }, []);
+
+  const getProvider = () => {
+    const eth = (window as unknown as { ethereum?: unknown }).ethereum;
+    if (!eth) throw new Error('No compatible wallet provider detected.');
+    return eth;
+  };
+
+  const sendContractTransaction = async (
+    address: `0x${string}`,
+    abi: readonly unknown[],
+    functionName: string,
+    args: readonly unknown[] = [],
+    value?: bigint
+  ): Promise<`0x${string}`> => {
+    if (!account) throw new Error('Connect your wallet first.');
+    const provider = getProvider();
+    const client = createWalletClient({
+      account: account as `0x${string}`,
+      chain: bsc,
+      transport: custom(provider as never)
+    });
+    const hash = await client.writeContract({
+      address,
+      abi,
+      functionName,
+      args,
+      ...(value === undefined ? {} : { value })
+    } as never);
+    const publicClient = createPublicClient({ chain: bsc, transport: http(CONTRACT_CONFIG.rpcUrl) }) as any;
+    await publicClient.waitForTransactionReceipt({ hash });
+    return hash;
+  };
 
   // Injected wallet event listener
   useEffect(() => {
@@ -256,7 +326,47 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Mint Execution
   const mintPixelBoyz = async (quantity: number) => {
-    return { success: false, error: liveConfigurationError };
+    if (!isContractDeployed('nft')) return { success: false, error: liveConfigurationError };
+    if (!account) return { success: false, error: 'Connect wallet to mint.' };
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > CONTRACT_CONFIG.maxWalletAllowance) {
+      return { success: false, error: 'Invalid mint quantity.' };
+    }
+
+    try {
+      const publicClient = createPublicClient({ chain: bsc, transport: http(CONTRACT_CONFIG.rpcUrl) }) as any;
+      const [price, freeMinted] = await Promise.all([
+        publicClient.readContract({
+          address: CONTRACT_CONFIG.nftAddress as `0x${string}`,
+          abi: PIXEL_BOYZ_NFT_ABI as any,
+          functionName: 'mintPrice'
+        }),
+        publicClient.readContract({
+          address: CONTRACT_CONFIG.nftAddress as `0x${string}`,
+          abi: PIXEL_BOYZ_NFT_ABI as any,
+          functionName: 'freeMintedByWallet',
+          args: [account as `0x${string}`]
+        })
+      ]);
+      const { proof } = checkAllowlistEligibility(account);
+      const freeRemaining = allowlistEligibility.isEligible
+        ? Math.max(0, CONTRACT_CONFIG.freeMintLimitPerWallet - Number(freeMinted))
+        : 0;
+      const paidQuantity = Math.max(0, quantity - (freePhaseOpen ? Math.min(quantity, freeRemaining) : 0));
+      const value = (price as bigint) * BigInt(paidQuantity);
+      const txHash = await sendContractTransaction(
+        CONTRACT_CONFIG.nftAddress as `0x${string}`,
+        PIXEL_BOYZ_NFT_ABI,
+        'mint',
+        [BigInt(quantity), proof],
+        value
+      );
+      return { success: true, txHash };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Mint transaction failed.' };
+    }
+    /*
+      NFT metadata and activity must be read from the indexer after confirmation.
+    */
     /* Live mint contract integration is required before this action is enabled. */
     if (!isContractDeployed('nft')) return { success: false, error: liveConfigurationError };
     if (!account) {
@@ -397,7 +507,26 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // List NFT
   const listNftForSale = async (tokenId: number, priceBnb: string) => {
-    return { success: false, error: liveConfigurationError };
+    if (!isContractDeployed('marketplace')) return { success: false, error: liveConfigurationError };
+    if (!account) return { success: false, error: 'Connect wallet to list.' };
+    try {
+      const price = parseEther(priceBnb);
+      await sendContractTransaction(
+        CONTRACT_CONFIG.nftAddress as `0x${string}`,
+        PIXEL_BOYZ_NFT_ABI,
+        'approve',
+        [CONTRACT_CONFIG.marketplaceAddress as `0x${string}`, BigInt(tokenId)]
+      );
+      const txHash = await sendContractTransaction(
+        CONTRACT_CONFIG.marketplaceAddress as `0x${string}`,
+        MARKETPLACE_ABI,
+        'list',
+        [CONTRACT_CONFIG.nftAddress as `0x${string}`, BigInt(tokenId), price]
+      );
+      return { success: true, txHash };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Listing transaction failed.' };
+    }
     if (!isContractDeployed('marketplace')) return { success: false, error: liveConfigurationError };
     if (!account) return { success: false, error: 'Connect wallet to list.' };
     const numPrice = parseFloat(priceBnb);
@@ -451,7 +580,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Cancel Listing
   const cancelNftListing = async (tokenId: number) => {
-    return { success: false, error: liveConfigurationError };
+    return { success: false, error: 'Cancel requires the on-chain listing ID from the marketplace indexer.' };
     if (!isContractDeployed('marketplace')) return { success: false, error: liveConfigurationError };
     if (!account) return { success: false, error: 'Connect wallet.' };
     const txHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
@@ -475,7 +604,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Buy NFT
   const buyNftFromMarketplace = async (tokenId: number) => {
-    return { success: false, error: liveConfigurationError };
+    return { success: false, error: 'Purchase requires the on-chain listing ID from the marketplace indexer.' };
     if (!isContractDeployed('marketplace')) return { success: false, error: liveConfigurationError };
     if (!account) return { success: false, error: 'Connect wallet to purchase.' };
     const target = nfts.find(n => n.id === tokenId);
@@ -546,7 +675,21 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Make Offer
   const makeOfferOnNft = async (tokenId: number, amountBnb: string) => {
-    return { success: false, error: liveConfigurationError };
+    if (!isContractDeployed('marketplace')) return { success: false, error: liveConfigurationError };
+    if (!account) return { success: false, error: 'Connect wallet to make an offer.' };
+    try {
+      const expiry = BigInt(Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60);
+      const txHash = await sendContractTransaction(
+        CONTRACT_CONFIG.marketplaceAddress as `0x${string}`,
+        MARKETPLACE_ABI,
+        'makeOffer',
+        [CONTRACT_CONFIG.nftAddress as `0x${string}`, BigInt(tokenId), expiry],
+        parseEther(amountBnb)
+      );
+      return { success: true, txHash };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Offer transaction failed.' };
+    }
     if (!isContractDeployed('marketplace')) return { success: false, error: liveConfigurationError };
     if (!account) return { success: false, error: 'Connect wallet to make an offer.' };
     const txHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
@@ -586,7 +729,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Accept Offer
   const acceptNftOffer = async (tokenId: number) => {
-    return { success: false, error: liveConfigurationError };
+    return { success: false, error: 'Accept requires the on-chain offer ID from the marketplace indexer.' };
     if (!account) return { success: false, error: 'Connect wallet.' };
     const target = nfts.find(n => n.id === tokenId);
     if (!target || !target.highestOffer) {
@@ -629,7 +772,23 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Forge 2 NFTs: Combine Token A + Token B (Token B burned permanently, Token A upgrades Level and traits)
   const forgeNfts = async (tokenAId: number, tokenBId: number) => {
-    return { success: false, error: liveConfigurationError };
+    if (!isContractDeployed('forge')) return { success: false, error: liveConfigurationError };
+    if (!account) return { success: false, error: 'Connect wallet to forge.' };
+    try {
+      if (!CONTRACT_CONFIG.forgeBnbCost) {
+        return { success: false, error: 'Forge recipe fee is not configured.' };
+      }
+      const txHash = await sendContractTransaction(
+        CONTRACT_CONFIG.forgeAddress as `0x${string}`,
+        FORGE_ABI,
+        'forge',
+        [BigInt(tokenAId), [BigInt(tokenBId)]],
+        parseEther(CONTRACT_CONFIG.forgeBnbCost)
+      );
+      return { success: true, txHash };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Forge transaction failed.' };
+    }
     if (!isContractDeployed('forge')) return { success: false, error: liveConfigurationError };
     if (!account) return { success: false, error: 'Connect wallet to enter Forge.' };
     if (tokenAId === tokenBId) return { success: false, error: 'Cannot forge an NFT with itself.' };
@@ -711,7 +870,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Claim Rewards Pool
   const claimRewardsPool = async (epoch: number) => {
-    return { success: false, error: liveConfigurationError };
+    void epoch;
+    return { success: false, error: 'Rewards are currently read-only. Claims are coming soon.' };
     if (!isContractDeployed('rewards')) return { success: false, error: liveConfigurationError };
     if (!account) return { success: false, error: 'Connect wallet.' };
     const amount = userClaimableBnb;
