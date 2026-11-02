@@ -89,3 +89,24 @@ export function StatCard({ label, value, detail }: { label: string; value: strin
 export function ActionButton({ children, disabled = true }: { children: React.ReactNode; disabled?: boolean }) {
   return <button disabled={disabled} className="neon-button disabled:cursor-not-allowed disabled:opacity-45 disabled:grayscale">{children}</button>;
 }
+
+const dashboardLinks = [
+  ["⌂", "Overview", "/"],
+  ["◈", "Collection", "/explore"],
+  ["◉", "Marketplace", "/marketplace"],
+  ["✦", "Forge", "/forge"],
+  ["⚡", "Rewards", "/rewards"],
+  ["◌", "Quests", "/quests"],
+  ["↗", "Activity", "/activity"],
+];
+
+export function DashboardShell({ active, children }: { active: string; children: React.ReactNode }) {
+  return <div className="dashboard-shell min-h-screen text-white">
+    <aside className="dashboard-rail">
+      <Link href="/" className="dashboard-logo"><span className="brand-mark">PB</span><span className="hidden xl:block">PIXEL<br />BOYZ</span></Link>
+      <div className="dashboard-nav">{dashboardLinks.map(([icon, label, href]) => <Link className={`dashboard-link ${active === label ? "active" : ""}`} href={href} key={label}><span>{icon}</span><b>{label}</b></Link>)}</div>
+      <div className="dashboard-rail-bottom"><Link className="dashboard-link" href="/profile"><span>◉</span><b>Profile</b></Link><Link className="dashboard-link" href="/admin"><span>⚙</span><b>Settings</b></Link></div>
+    </aside>
+    <div className="dashboard-content"><header className="dashboard-header"><div className="dashboard-search">⌕ <span>Search collection, token ID...</span></div><div className="flex items-center gap-3"><span className="chain-chip"><i /> BNB CHAIN</span><button className="dashboard-connect">CONNECT WALLET</button><span className="avatar-chip">PB</span></div></header>{children}</div>
+  </div>;
+}
