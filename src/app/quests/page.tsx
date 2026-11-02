@@ -1,3 +1,9 @@
-import { ConfigNotice, SectionHeading, SiteShell } from "@/components/site";
-const quests = ["Connect wallet", "Mint your first Pixel Boy", "Own three NFTs", "List an NFT", "Complete a Forge upgrade", "Purchase an NFT"];
-export default function Quests() { return <SiteShell active="Quests"><main className="mx-auto min-h-[750px] max-w-7xl px-5 pb-24 pt-40 lg:px-8"><SectionHeading kicker="LIVE MISSIONS" title="Make your mark." text="Quest progress is awarded only after verified blockchain events are indexed." /><div className="mt-12"><ConfigNotice title="Quest verification is not connected" /><div className="mt-6 grid gap-4 md:grid-cols-2">{quests.map((quest, index) => <div className="feature-card" key={quest}><div className="flex items-center justify-between"><span className="font-display font-bold">{quest}</span><span className="text-cyan-300">+{(index + 1) * 100} XP</span></div><div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full w-0 bg-cyan-300" /></div><div className="mt-3 text-xs text-slate-500">NOT STARTED · VERIFIED EVENT REQUIRED</div></div>)}</div></div></main></SiteShell>; }
+"use client";
+
+import { useRouter } from 'next/navigation';
+import { QuestsPage } from '@/views/QuestsPage';
+
+export default function QuestsRoute() {
+  const router = useRouter();
+  return <QuestsPage navigate={(path) => router.push(path)} />;
+}

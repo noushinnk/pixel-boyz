@@ -1,2 +1,9 @@
-import { ModulePage } from "@/components/site";
-export default function Profile() { return <ModulePage active="Home" kicker="YOUR IDENTITY" title="Own your story." description="Connect a wallet to view the on-chain portfolio, activity, XP, rewards, and forge statistics tied to your address." />; }
+"use client";
+
+import { useRouter } from 'next/navigation';
+import { ProfilePage } from '@/views/ProfilePage';
+
+export default function ProfileRoute() {
+  const router = useRouter();
+  return <ProfilePage navigate={(path) => router.push(path)} />;
+}

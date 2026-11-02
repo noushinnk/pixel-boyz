@@ -1,30 +1,60 @@
-import type { Metadata } from "next";
-import type { ReactNode } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import type { Metadata } from 'next';
+import './globals.css';
+import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: "Pixel Boyz — One decentralized universe",
-  description: "10,000 unique characters. One decentralized universe on BNB Smart Chain.",
+  title: 'PIXEL BOYZ — Decentralized NFT Universe',
+  description: '10,000 unique characters. One decentralized universe on BNB Smart Chain. Mint, explore, trade, forge, and earn rewards.',
+  openGraph: {
+    title: 'PIXEL BOYZ — Decentralized NFT Universe',
+    description: '10,000 unique characters. One decentralized universe on BNB Smart Chain. Mint, explore, trade, forge, and earn rewards.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PIXEL BOYZ — Decentralized NFT Universe',
+    description: '10,000 unique characters. One decentralized universe on BNB Smart Chain. Mint, explore, trade, forge, and earn rewards.',
+  },
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var originalFetch = window.fetch;
+                  Object.defineProperty(window, 'fetch', {
+                    get: function() { return originalFetch; },
+                    set: function(val) { originalFetch = val; },
+                    configurable: true,
+                    enumerable: true
+                  });
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body
+        suppressHydrationWarning
+        className="bg-[#080b18] text-white antialiased selection:bg-cyan-500/30 selection:text-cyan-200 min-h-screen flex flex-col"
+      >
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

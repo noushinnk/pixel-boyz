@@ -1,2 +1,9 @@
-import { ConfigNotice, DashboardShell, SectionHeading, StatCard } from "@/components/site";
-export default function Forge() { return <DashboardShell active="Forge"><main className="dashboard-main"><SectionHeading kicker="EVOLUTION LAB / FORGE PROTOCOL" title="Upgrade your legend." text="Combine eligible NFTs, burn components, and unlock higher levels with the actual Forge contract rules." /><div className="forge-layout mt-10"><div className="forge-stage"><div className="forge-orb">PB</div><div className="forge-slots"><span>+</span><span>+</span><span>+</span></div><div className="forge-result">?</div></div><div className="forge-panel"><div className="eyebrow">UPGRADE PREVIEW</div><h2 className="mt-3 font-display text-2xl font-bold">LEVEL 01 → LEVEL 02</h2><div className="mt-6 grid gap-4 sm:grid-cols-2"><StatCard label="XP REQUIRED" value="—" detail="CONTRACT READ" /><StatCard label="FORGE COST" value="—" detail="CONTRACT READ" /></div><div className="mt-6"><ConfigNotice title="Forge inventory is not connected" /></div></div></div></main></DashboardShell>; }
+"use client";
+
+import { useRouter } from 'next/navigation';
+import { ForgePage } from '@/views/ForgePage';
+
+export default function ForgeRoute() {
+  const router = useRouter();
+  return <ForgePage navigate={(path) => router.push(path)} />;
+}

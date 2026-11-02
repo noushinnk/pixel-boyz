@@ -1,2 +1,9 @@
-import { ModulePage } from "@/components/site";
-export default function Admin() { return <ModulePage active="Home" kicker="CONTROL ROOM" title="Built for operators." description="Role-gated administration is reserved for verified wallet roles and on-chain authorization. No private keys or service credentials are exposed client-side." />; }
+"use client";
+
+import { useRouter } from 'next/navigation';
+import { AdminPage } from '@/views/AdminPage';
+
+export default function AdminRoute() {
+  const router = useRouter();
+  return <AdminPage navigate={(path) => router.push(path)} />;
+}

@@ -1,3 +1,9 @@
-import { CollectionGallery } from "@/components/collection";
-import { DashboardShell, SectionHeading } from "@/components/site";
-export default function Marketplace() { return <DashboardShell active="Marketplace"><main className="dashboard-main"><SectionHeading kicker="MARKETPLACE / 2.5% FEE" title="Trade the universe." text="Premium cards, filters, pricing, and verified activity from the marketplace contract." /><div className="marketplace-metrics mt-10"><div><span>FLOOR PRICE</span><b>— BNB</b></div><div><span>VOLUME</span><b>— BNB</b></div><div><span>LISTINGS</span><b>—</b></div><div><span>SALES</span><b>—</b></div></div><div className="mt-8"><CollectionGallery /></div></main></DashboardShell>; }
+"use client";
+
+import { useRouter } from 'next/navigation';
+import { MarketplacePage } from '@/views/MarketplacePage';
+
+export default function MarketplaceRoute() {
+  const router = useRouter();
+  return <MarketplacePage navigate={(path) => router.push(path)} />;
+}

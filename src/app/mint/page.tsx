@@ -1,2 +1,9 @@
-import { ActionButton, ConfigNotice, SectionHeading, SiteShell, StatCard } from "@/components/site";
-export default function Mint() { return <SiteShell active="Mint"><main className="mx-auto min-h-[750px] max-w-7xl px-5 pb-24 pt-40 lg:px-8"><SectionHeading kicker="MINT PORTAL / BSC" title="Claim your character." text="Free allocation, paid minting, Merkle eligibility, and exact payment calculations are ready for contract configuration." /><div className="mt-12 grid gap-5 lg:grid-cols-[1.2fr_.8fr]"><div className="feature-card"><div className="mint-preview"><span>PB</span><small>ORIGIN SERIES</small></div><div className="mt-6 grid gap-4 sm:grid-cols-3"><StatCard label="SUPPLY" value="10,000" detail="FIXED MAXIMUM" /><StatCard label="PRICE" value="0.001" detail="BNB / PAID NFT" /><StatCard label="FREE PHASE" value="6,000" detail="ALLOCATED" /></div></div><div className="feature-card"><ConfigNotice title="Wallet connection is not configured" /><div className="mt-6 flex items-center justify-between"><span className="text-sm text-slate-400">QUANTITY</span><div className="flex items-center gap-3"><button className="quantity-button">−</button><span className="font-display text-xl">1</span><button className="quantity-button">+</button></div></div><div className="mt-6 space-y-3 border-t border-white/10 pt-5 text-sm"><div className="flex justify-between"><span className="text-slate-500">FREE NFTs</span><span>—</span></div><div className="flex justify-between"><span className="text-slate-500">PAID NFTs</span><span>—</span></div><div className="flex justify-between font-display font-bold"><span>TOTAL</span><span>— BNB</span></div></div><div className="mt-6"><ActionButton>CONNECT WALLET TO MINT</ActionButton></div></div></div></main></SiteShell>; }
+"use client";
+
+import { useRouter } from 'next/navigation';
+import { MintPage } from '@/views/MintPage';
+
+export default function MintRoute() {
+  const router = useRouter();
+  return <MintPage navigate={(path) => router.push(path)} />;
+}

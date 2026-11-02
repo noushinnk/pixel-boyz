@@ -1,18 +1,9 @@
-import { ConfigNotice, DashboardShell } from "@/components/site";
+"use client";
 
-const rewardActivities = [
-  ["✦", "DAILY WARRIOR", "Complete 3 daily quests", "— / 3", "purple"],
-  ["◈", "LOOT HUNTER", "Claim an ecosystem reward", "— / 1", "orange"],
-  ["⚡", "FORGE MASTER", "Complete a Forge upgrade", "— / 1", "cyan"],
-  ["◉", "COMMUNITY BUILDER", "Participate in the universe", "— / 5", "green"],
-];
+import { useRouter } from 'next/navigation';
+import { RewardsPage } from '@/views/RewardsPage';
 
-export default function Rewards() {
-  return <DashboardShell active="Rewards"><main className="dashboard-main rewards-dashboard">
-    <div className="rewards-welcome"><div><div className="eyebrow">WELCOME BACK, PLAYER</div><h1 className="mt-2 font-display text-3xl font-bold">Your reward center</h1><p className="mt-2 text-sm text-slate-400">Earn XP, unlock milestones, and claim your share of the Pixel Boyz universe.</p></div><div className="rewards-rank"><span>PB</span><div><b>UNCONNECTED WALLET</b><small>Connect to load your profile</small></div></div></div>
-    <section className="rewards-feature mt-8"><div className="rewards-feature-art"><span>PB</span><div className="rewards-feature-glow" /></div><div className="rewards-feature-copy"><span className="rewards-tag">REWARD PROTOCOL</span><h2 className="mt-4 font-display text-4xl font-black uppercase">Earn your<br /><em>place.</em></h2><p className="mt-4 max-w-md text-sm leading-6 text-slate-400">Complete verified quests, collect XP, and unlock BNB rewards through the on-chain rewards contract.</p><div className="mt-7 flex flex-wrap gap-3"><span className="metric-chip"><b>—</b><small>TOTAL XP</small></span><span className="metric-chip"><b>—</b><small>CLAIMABLE BNB</small></span><span className="metric-chip"><b>—</b><small>CURRENT EPOCH</small></span></div></div><div className="mission-progress"><div className="eyebrow">MISSION PROGRESS</div><div className="progress-ring-large"><span>—<small>XP</small></span></div><div className="progress-meta"><span>REWARD LEVEL</span><b>UNAVAILABLE</b></div><div className="progress-meta"><span>CLAIM STATUS</span><b>NOT CONNECTED</b></div></div></section>
-    <div className="rewards-section-heading"><div><div className="eyebrow">RECENT ACTIVITIES</div><h2 className="font-display text-xl font-bold">Your missions</h2></div><span className="view-all">VIEW ALL ↗</span></div>
-    <section className="reward-activity-grid">{rewardActivities.map(([icon, title, text, count, color]) => <div className={`reward-activity-card ${color}`} key={title}><div className="activity-icon">{icon}</div><div className="mt-5 font-display text-sm font-bold">{title}</div><p className="mt-2 text-xs text-slate-500">{text}</p><div className="mt-5 flex items-center justify-between text-xs"><span>{count}</span><span>+100 XP</span></div><div className="reward-progress"><i /></div><small className="mt-3 block text-slate-600">CONTRACT VERIFICATION REQUIRED</small></div>)}</section>
-    <section className="rewards-bottom-grid mt-6"><div className="feature-card"><div className="eyebrow">CLAIMABLE REWARDS</div><div className="mt-5 flex items-end justify-between"><div><b className="font-display text-4xl">—</b><span className="ml-2 text-sm text-slate-500">BNB</span></div><button className="neon-button opacity-45" disabled>CLAIM REWARDS</button></div><div className="mt-6"><ConfigNotice title="Merkle proof required" /></div></div><div className="feature-card"><div className="eyebrow">REWARD EPOCH HISTORY</div><div className="mt-5 space-y-3">{["EPOCH 03", "EPOCH 02", "EPOCH 01"].map((epoch) => <div className="epoch-row" key={epoch}><span>{epoch}</span><b>— BNB</b><small>NOT INDEXED</small></div>)}</div></div></section>
-  </main></DashboardShell>;
+export default function RewardsRoute() {
+  const router = useRouter();
+  return <RewardsPage navigate={(path) => router.push(path)} />;
 }
