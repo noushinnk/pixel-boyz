@@ -209,7 +209,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
               Mint Your <span className="gradient-text">Pixel Boy</span>
             </h1>
             <p className="mt-2 text-sm text-slate-300 font-sans max-w-2xl">
-              10,000 unique pixel warriors on BNB Smart Chain Mainnet. Live contract metrics and contract-verified Agent ID free allocation.
+              10,000 unique pixel warriors on BNB Smart Chain Mainnet. Live contract metrics, Binance Agent ID free allocation, and instant Merkle allowlist verification.
             </p>
           </div>
 
