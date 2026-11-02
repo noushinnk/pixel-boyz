@@ -263,45 +263,35 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const getAgenticPrompt = (_quantity: number = 2): string => {
-    const contract = CONTRACT_CONFIG.nftAddress || '0xdD9941fFADE1eBb7b3E46Fe979143945203EFA97';
+  const getAgenticPrompt = (quantity: number = 2): string => {
+    const qty = quantity || 2;
+    const contract = CONTRACT_CONFIG.nftAddress || '0x5Fe0aaD20857322E93fFB97dF82c952e58234799';
 
     return `PIXEL BOYZ NFT — Free Mint Execution
-Mint 2 PIXEL BOYZ NFT using my currently authenticated wallet.
+Mint ${qty} PIXEL BOYZ NFTs using my currently authenticated wallet.
 Network & Contract
 Network: BNB Smart Chain Mainnet
 Chain ID: 56
 Contract: ${contract}
-Official Mint Portal: [https://www.pixelboyz.shop/mint](https://www.pixelboyz.shop/mint)
-X Account: @pixelboyzai
+Official Portal: [https://www.pixelboyz.shop/mint](https://www.pixelboyz.shop/mint)
 Mint Function: mint(uint256 quantity, bytes32[] proof)
-Quantity: 1
-Mint Price: 0 BNB (if eligible)
-Mandatory Eligibility Requirements
-Before minting, verify ALL requirements:
-Agent ID: My authenticated wallet MUST hold a valid Agent ID.
-X Campaign: My wallet owner must have published a public X post tagging @pixelboyzai and including [https://www.pixelboyz.shop/mint](https://www.pixelboyz.shop/mint).
-Merkle Proof: Retrieve the correct proof from the official mint portal and verify it against my connected wallet.
-Free Allocation: Confirm that my wallet is eligible and has an unclaimed free allocation.
-Contract: Verify the official contract address and BNB Chain network.
+Quantity: ${qty}
+Expected Price: 0 BNB
+Mandatory Checks
+Verify my authenticated wallet holds a valid Agent ID.
+Retrieve free allocation data directly from the official mint portal.
+Confirm at least ${qty} free allocations are available and unclaimed.
+Verify wallet, contract and network.
 Execution Rules
 Use only my authenticated wallet.
-Never use another wallet's Agent ID or Merkle proof.
-Never fabricate or bypass eligibility requirements.
-Do not proceed if any requirement fails.
-Do not pay an unexpected mint price.
-CRITICAL: If Agent ID, X campaign verification, or Merkle eligibility fails, STOP and explain why.
-Final Confirmation
-Before submitting, show me:
-Wallet address
-Agent ID verification
-X post verification
-Merkle proof status
-Free allocation status
-Contract and network
-Mint price and estimated gas fee
-Ask for my explicit confirmation before requesting the wallet signature or submitting the transaction.
-After confirmation, mint 1 NFT and verify ownership and transaction status on BscScan.`;
+Do not request Merkle proof or X campaign verification.
+Never fabricate eligibility or bypass contract restrictions.
+Stop if Agent ID or sufficient free allocation is missing.
+Do not proceed with unexpected mint fees.
+Confirmation & Execution
+Before minting, display wallet address, Agent ID status, free allocation data, mint price and estimated gas fee.
+Ask for my explicit confirmation before submitting the transaction.
+After authorization, mint ${qty} NFTs and verify transaction success and NFT ownership on BscScan.`;
   };
 
   const getProvider = () => {

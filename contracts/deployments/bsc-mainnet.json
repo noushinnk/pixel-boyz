@@ -2,7 +2,7 @@
   "contract": "PixelBoyzNFT",
   "network": "BNB Smart Chain",
   "chainId": 56,
-  "address": "0xdD9941fFADE1eBb7b3E46Fe979143945203EFA97",
+  "address": "0x5Fe0aaD20857322E93fFB97dF82c952e58234799",
   "deploymentTransaction": "0xed3f72d36bf0f9575bc7475f723d52c63e6a51077a925ee59e15303f2f15d628",
   "deploymentBlock": 131176730,
   "admin": "0x2d36622575A76913b4d5521DA47e259C0579deEb",
