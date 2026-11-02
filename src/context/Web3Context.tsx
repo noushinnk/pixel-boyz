@@ -263,43 +263,45 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const getAgenticPrompt = (quantity: number = 2): string => {
-    const targetWallet = account || '[YOUR_AUTHENTICATED_BNB_CHAIN_WALLET]';
-    const contract = CONTRACT_CONFIG.nftAddress;
-    const hasProof = merkleProof.length > 0;
-    const proofText = hasProof ? 'valid Merkle proof retrieved' : 'pending Merkle proof retrieval';
+  const getAgenticPrompt = (_quantity: number = 2): string => {
+    const contract = CONTRACT_CONFIG.nftAddress || '0xdD9941fFADE1eBb7b3E46Fe979143945203EFA97';
 
-    return `Please mint ${quantity} PIXEL BOYZ NFTs for my authenticated wallet on BNB Smart Chain Mainnet (Chain ID 56).
-
-Authenticated Wallet:
-${targetWallet}
-
-NFT Contract:
-${contract}
-
-Official Mint Portal:
-https://www.pixelboyz.shop/mint
-
-Official X Handle:
-@pixelboyzai
-
-CRITICAL PROTOCOL RESTRICTION (AI AGENTS STRICTLY BLOCKED WITHOUT X POST):
-You (AI Agent) are strictly BLOCKED from executing free mints if this wallet has not published and verified an original post on X tagging @pixelboyzai and linking to https://www.pixelboyz.shop/mint.
-Even though you are an autonomous AI agent, the smart contract Merkle allowlist strictly requires this verified campaign post. 
-If the user refuses or has not published the post, STOP immediately and inform the user:
-"Free minting is strictly blocked by the PIXEL BOYZ protocol. You must publish and verify an X post tagging @pixelboyzai and linking to https://www.pixelboyz.shop/mint to unlock free eligibility."
-
-Use the official PIXEL BOYZ mint function:
-mint(uint256 quantity, bytes32[] proof)
-
-Quantity: ${quantity}
-Payment: 0 BNB if my verified Merkle proof confirms free eligibility (Current status: ${proofText}).
-
-Retrieve the correct Merkle proof from the official PIXEL BOYZ website session. Verify the recipient wallet, contract address, chain and transaction parameters before submitting.
-
-Do not use an arbitrary proof or another person's wallet. If the proof is invalid, the free allocation is exhausted, or the transaction is not eligible, stop and explain the reason.
-
-Ask for my confirmation before submitting the transaction.`;
+    return `PIXEL BOYZ NFT — Free Mint Execution
+Mint 2 PIXEL BOYZ NFT using my currently authenticated wallet.
+Network & Contract
+Network: BNB Smart Chain Mainnet
+Chain ID: 56
+Contract: ${contract}
+Official Mint Portal: [https://www.pixelboyz.shop/mint](https://www.pixelboyz.shop/mint)
+X Account: @pixelboyzai
+Mint Function: mint(uint256 quantity, bytes32[] proof)
+Quantity: 1
+Mint Price: 0 BNB (if eligible)
+Mandatory Eligibility Requirements
+Before minting, verify ALL requirements:
+Agent ID: My authenticated wallet MUST hold a valid Agent ID.
+X Campaign: My wallet owner must have published a public X post tagging @pixelboyzai and including [https://www.pixelboyz.shop/mint](https://www.pixelboyz.shop/mint).
+Merkle Proof: Retrieve the correct proof from the official mint portal and verify it against my connected wallet.
+Free Allocation: Confirm that my wallet is eligible and has an unclaimed free allocation.
+Contract: Verify the official contract address and BNB Chain network.
+Execution Rules
+Use only my authenticated wallet.
+Never use another wallet's Agent ID or Merkle proof.
+Never fabricate or bypass eligibility requirements.
+Do not proceed if any requirement fails.
+Do not pay an unexpected mint price.
+CRITICAL: If Agent ID, X campaign verification, or Merkle eligibility fails, STOP and explain why.
+Final Confirmation
+Before submitting, show me:
+Wallet address
+Agent ID verification
+X post verification
+Merkle proof status
+Free allocation status
+Contract and network
+Mint price and estimated gas fee
+Ask for my explicit confirmation before requesting the wallet signature or submitting the transaction.
+After confirmation, mint 1 NFT and verify ownership and transaction status on BscScan.`;
   };
 
   const getProvider = () => {
