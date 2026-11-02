@@ -115,6 +115,12 @@ async function runTestSuite() {
   assert(unlockedResult.eligible, 'Merkle proof is unlocked immediately after X post link submission');
   assert(unlockedResult.proof.length >= 0, 'Proof array is issued for newly unlocked wallet');
 
+  // Verify submitting post without connected wallet succeeds (connect wallet not required)
+  const noWalletResult = await verifyXCampaignPost({
+    postUrl: `https://x.com/PPrimalz/status/2117195841878500000`
+  });
+  assert(noWalletResult.success, 'Submitting post link succeeds without connected wallet (wallet not required)');
+
   // TEST 5: Mint Quantity and Payment Calculations
   console.log('\n--- 5. MINT QUANTITY & BNB VALUE CALCULATIONS ---');
   const mintPriceWei = 1000000000000000n; // 0.001 BNB

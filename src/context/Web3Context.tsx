@@ -36,8 +36,10 @@ interface Web3ContextType {
     freeRemaining: number;
   };
 
+  is6kMinted: boolean;
+
   // Connection handlers
-  connectWallet: () => Promise<void>;
+  connectWallet: (preferredWallet?: string | unknown) => Promise<void>;
   disconnectWallet: () => void;
   switchNetwork: (targetChainId?: number) => Promise<void>;
 
@@ -203,6 +205,13 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Initial load and periodic background refresh every 20 seconds
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        if (localStorage.getItem('pb_x_campaign_completed') === 'true') {
+          setXCampaignCompleted(true);
+        }
+      } catch {}
+    }
     refreshContractData();
     const interval = setInterval(refreshContractData, 20000);
     return () => clearInterval(interval);
@@ -229,17 +238,20 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const verifyXCampaignPost = async (postUrl: string) => {
-    if (!account) return { success: false, error: 'Connect wallet first' };
+    // Wallet connection is NOT required to submit post link and unlock Agentic Prompt!
     setXCampaignLoading(true);
     try {
       const res = await fetch('/api/campaign/verify-post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postUrl, walletAddress: account })
+        body: JSON.stringify({ postUrl, walletAddress: account || undefined })
       });
       const data = await res.json();
       if (res.ok && data.success) {
         setXCampaignCompleted(true);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('pb_x_campaign_completed', 'true');
+        }
         await refreshContractData();
         return { success: true, message: data.message };
       }
@@ -372,21 +384,49 @@ Ask for my confirmation before submitting the transaction.`;
     };
   }, []);
 
-  // Connect Injected Browser Wallet (MetaMask, Binance Web3 Wallet, Trust Wallet)
-  const connectWallet = async () => {
+  // Connect Injected Browser Wallet (ONLY Binance Agentic Wallet allowed until 6,000 free NFTs are minted)
+  const connectWallet = async (preferredWallet?: string | unknown) => {
     setIsConnecting(true);
     try {
+      const is6kMinted = totalFreeMinted >= 6000 || freeAllocationRemaining <= 0 || freePhaseClosed;
+      const walletKey = typeof preferredWallet === 'string' ? preferredWallet : undefined;
+
+      // Protocol Rule: user will not be allowed to connect any wallet (except binance agentic wallet) until the 6k nft is minted
+      if (!is6kMinted && walletKey && walletKey !== 'binance') {
+        alert('🚫 ACCESS RESTRICTED: During the 6,000 Free Mint phase, ONLY Binance Agentic Wallet is permitted to connect.\n\nAll other wallets (MetaMask, OKX, Trust Wallet, Coinbase) will be unlocked for public mint once all 6,000 free NFTs have been minted!');
+        return;
+      }
+
       const w = typeof window !== 'undefined' ? (window as any) : {};
       let eth = w.ethereum;
-      if (eth?.providers?.length) {
-        eth = eth.providers.find((p: any) => p.isMetaMask || p.isBinance) || eth.providers[0];
-      }
-      if (!eth) {
-        eth = w.binance || w.okxwallet || w.trustwallet || w.phantom?.ethereum;
+
+      if (!is6kMinted) {
+        // Enforce Binance Web3 / Agentic Wallet
+        const binanceProvider = w.binance || (eth?.providers ? eth.providers.find((p: any) => p.isBinance) : (eth?.isBinance ? eth : null));
+        if (!binanceProvider && !w.binance) {
+          alert('🚫 ONLY BINANCE AGENTIC WALLET PERMITTED:\n\nDuring the 6,000 Free Mint phase, only Binance Agentic Wallet is authorized to connect. Other wallets will unlock for public mint once all 6,000 free NFTs are minted.\n\nPlease connect with Binance Web3 / Agentic Wallet or copy the Agentic Wallet Mint Prompt to execute via your AI agent.');
+          return;
+        }
+        eth = binanceProvider || eth;
+      } else {
+        if (eth?.providers?.length) {
+          if (walletKey === 'metamask') {
+            eth = eth.providers.find((p: any) => p.isMetaMask && !p.isBinance) || eth.providers[0];
+          } else if (walletKey === 'okx') {
+            eth = w.okxwallet || eth.providers.find((p: any) => p.isOkxWallet) || eth.providers[0];
+          } else if (walletKey === 'trust') {
+            eth = w.trustwallet || eth.providers.find((p: any) => p.isTrust) || eth.providers[0];
+          } else {
+            eth = eth.providers.find((p: any) => p.isMetaMask || p.isBinance) || eth.providers[0];
+          }
+        }
+        if (!eth) {
+          eth = w.binance || w.okxwallet || w.trustwallet || w.phantom?.ethereum;
+        }
       }
 
       if (!eth || typeof eth.request !== 'function') {
-        alert('No Web3 wallet extension detected in this browser.\n\nPlease install MetaMask, Binance Web3 Wallet, or Trust Wallet to connect to BNB Smart Chain, or copy the Agentic Wallet Mint Prompt to execute via your Binance agent.');
+        alert('No Web3 wallet extension detected in this browser.\n\nPlease install Binance Web3 Wallet to connect to BNB Smart Chain, or copy the Agentic Wallet Mint Prompt to execute via your AI agent.');
         return;
       }
 
@@ -1017,6 +1057,8 @@ Ask for my confirmation before submitting the transaction.`;
     setFreePhaseOpen(false);
   };
 
+  const is6kMinted = totalFreeMinted >= 6000 || freeAllocationRemaining <= 0 || freePhaseClosed;
+
   return (
     <Web3Context.Provider
       value={{
@@ -1027,6 +1069,7 @@ Ask for my confirmation before submitting the transaction.`;
         isConnecting,
         isBinanceAgenticWallet,
         allowlistEligibility,
+        is6kMinted,
         connectWallet,
         disconnectWallet,
         switchNetwork,

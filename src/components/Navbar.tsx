@@ -26,6 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
     isConnected,
     isConnecting,
     isBinanceAgenticWallet,
+    is6kMinted,
     connectWallet,
     disconnectWallet,
     switchNetwork,
@@ -437,13 +438,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
               {/* Option 1: Binance Web3 / Agentic Wallet */}
               <button
                 onClick={() => {
-                  connectWallet();
+                  connectWallet('binance');
                   setWalletModalOpen(false);
                 }}
-                className="group flex items-center justify-between w-full rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-950/30 to-[#0e1530] p-3.5 hover:border-amber-400 hover:shadow-[0_0_20px_rgba(240,185,11,0.2)] transition-all text-xs text-left cursor-pointer"
+                className="group flex items-center justify-between w-full rounded-2xl border border-amber-500/50 bg-gradient-to-r from-amber-950/40 to-[#0e1530] p-3.5 hover:border-amber-400 hover:shadow-[0_0_20px_rgba(240,185,11,0.25)] transition-all text-xs text-left cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-black/60 border border-amber-500/30 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="h-10 w-10 rounded-xl bg-black/60 border border-amber-500/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <BinanceLogoSvg className="h-6 w-6" />
                   </div>
                   <div>
@@ -451,11 +452,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                       <span className="font-bold text-white group-hover:text-amber-300 transition-colors">
                         Binance Web3 / Agentic Wallet
                       </span>
-                      <span className="rounded bg-amber-400/20 text-[#F0B90B] border border-amber-400/40 px-1.5 py-0.2 text-[9px] font-bold">
-                        RECOMMENDED
+                      <span className="rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 text-[9px] font-bold">
+                        AUTHORIZED
                       </span>
                     </div>
-                    <span className="text-[11px] text-slate-400 block mt-0.5">
+                    <span className="text-[11px] text-slate-300 block mt-0.5">
                       BNB Chain Native · 2 Free Mints for Verified (.ai) Holders
                     </span>
                   </div>
@@ -468,116 +469,176 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
               {/* Option 2: MetaMask */}
               <button
                 onClick={() => {
-                  connectWallet();
+                  if (!is6kMinted) {
+                    alert('🚫 ACCESS RESTRICTED: During the 6,000 Free Mint phase, ONLY Binance Agentic Wallet is permitted.\n\nMetaMask and other standard wallets will be unlocked for public mint once all 6,000 free NFTs have been minted!');
+                    return;
+                  }
+                  connectWallet('metamask');
                   setWalletModalOpen(false);
                 }}
-                className="group flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 hover:border-orange-500/50 hover:bg-orange-500/5 transition-all text-xs text-left cursor-pointer"
+                className={`group flex items-center justify-between w-full rounded-2xl border p-3.5 transition-all text-xs text-left cursor-pointer ${
+                  !is6kMinted
+                    ? 'border-white/5 bg-white/[0.01] opacity-60 hover:opacity-80 hover:border-amber-500/30'
+                    : 'border-white/10 bg-white/[0.03] hover:border-orange-500/50 hover:bg-orange-500/5'
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <MetaMaskLogoSvg className="h-6 w-6" />
                   </div>
                   <div>
-                    <span className="font-bold text-white group-hover:text-orange-300 transition-colors block">
-                      MetaMask
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-white group-hover:text-orange-300 transition-colors block">
+                        MetaMask
+                      </span>
+                      {!is6kMinted && (
+                        <span className="rounded bg-slate-800 text-slate-400 border border-white/10 px-1.5 py-0.2 text-[9px] font-bold">
+                          LOCKED (UNTIL 6K MINTED)
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[11px] text-slate-400 block mt-0.5">
-                      Browser Extension & Mobile Dapp Browser
+                      {!is6kMinted ? 'Unlocks for public mint once 6,000 free NFTs are minted' : 'Browser Extension & Mobile Dapp Browser'}
                     </span>
                   </div>
                 </div>
-                <span className="text-slate-400 group-hover:text-orange-400 font-bold text-xs shrink-0 pl-2 group-hover:translate-x-1 transition-transform">
-                  Connect →
+                <span className="text-slate-400 text-xs shrink-0 pl-2">
+                  {!is6kMinted ? '🔒 Locked' : 'Connect →'}
                 </span>
               </button>
 
               {/* Option 3: Trust Wallet */}
               <button
                 onClick={() => {
-                  connectWallet();
+                  if (!is6kMinted) {
+                    alert('🚫 ACCESS RESTRICTED: During the 6,000 Free Mint phase, ONLY Binance Agentic Wallet is permitted.\n\nTrust Wallet and other standard wallets will be unlocked for public mint once all 6,000 free NFTs have been minted!');
+                    return;
+                  }
+                  connectWallet('trust');
                   setWalletModalOpen(false);
                 }}
-                className="group flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all text-xs text-left cursor-pointer"
+                className={`group flex items-center justify-between w-full rounded-2xl border p-3.5 transition-all text-xs text-left cursor-pointer ${
+                  !is6kMinted
+                    ? 'border-white/5 bg-white/[0.01] opacity-60 hover:opacity-80 hover:border-amber-500/30'
+                    : 'border-white/10 bg-white/[0.03] hover:border-blue-500/50 hover:bg-blue-500/5'
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <TrustWalletLogoSvg className="h-6 w-6" />
                   </div>
                   <div>
-                    <span className="font-bold text-white group-hover:text-blue-300 transition-colors block">
-                      Trust Wallet
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-white group-hover:text-blue-300 transition-colors block">
+                        Trust Wallet
+                      </span>
+                      {!is6kMinted && (
+                        <span className="rounded bg-slate-800 text-slate-400 border border-white/10 px-1.5 py-0.2 text-[9px] font-bold">
+                          LOCKED (UNTIL 6K MINTED)
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[11px] text-slate-400 block mt-0.5">
-                      Binance Official Partner Multi-Chain Wallet
+                      {!is6kMinted ? 'Unlocks for public mint once 6,000 free NFTs are minted' : 'Binance Official Partner Multi-Chain Wallet'}
                     </span>
                   </div>
                 </div>
-                <span className="text-slate-400 group-hover:text-blue-400 font-bold text-xs shrink-0 pl-2 group-hover:translate-x-1 transition-transform">
-                  Connect →
+                <span className="text-slate-400 text-xs shrink-0 pl-2">
+                  {!is6kMinted ? '🔒 Locked' : 'Connect →'}
                 </span>
               </button>
 
               {/* Option 4: OKX Wallet */}
               <button
                 onClick={() => {
-                  connectWallet();
+                  if (!is6kMinted) {
+                    alert('🚫 ACCESS RESTRICTED: During the 6,000 Free Mint phase, ONLY Binance Agentic Wallet is permitted.\n\nOKX Wallet and other standard wallets will be unlocked for public mint once all 6,000 free NFTs have been minted!');
+                    return;
+                  }
+                  connectWallet('okx');
                   setWalletModalOpen(false);
                 }}
-                className="group flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 hover:border-cyan-400/50 hover:bg-cyan-500/5 transition-all text-xs text-left cursor-pointer"
+                className={`group flex items-center justify-between w-full rounded-2xl border p-3.5 transition-all text-xs text-left cursor-pointer ${
+                  !is6kMinted
+                    ? 'border-white/5 bg-white/[0.01] opacity-60 hover:opacity-80 hover:border-amber-500/30'
+                    : 'border-white/10 bg-white/[0.03] hover:border-cyan-400/50 hover:bg-cyan-500/5'
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <OKXLogoSvg className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <span className="font-bold text-white group-hover:text-cyan-300 transition-colors block">
-                      OKX Wallet
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-white group-hover:text-cyan-300 transition-colors block">
+                        OKX Wallet
+                      </span>
+                      {!is6kMinted && (
+                        <span className="rounded bg-slate-800 text-slate-400 border border-white/10 px-1.5 py-0.2 text-[9px] font-bold">
+                          LOCKED (UNTIL 6K MINTED)
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[11px] text-slate-400 block mt-0.5">
-                      Multi-Chain Web3 & Smart Account Wallet
+                      {!is6kMinted ? 'Unlocks for public mint once 6,000 free NFTs are minted' : 'Multi-Chain Web3 & Smart Account Wallet'}
                     </span>
                   </div>
                 </div>
-                <span className="text-slate-400 group-hover:text-cyan-400 font-bold text-xs shrink-0 pl-2 group-hover:translate-x-1 transition-transform">
-                  Connect →
+                <span className="text-slate-400 text-xs shrink-0 pl-2">
+                  {!is6kMinted ? '🔒 Locked' : 'Connect →'}
                 </span>
               </button>
 
               {/* Option 5: Any Injected Web3 / Browser Wallet */}
               <button
                 onClick={() => {
-                  connectWallet();
+                  if (!is6kMinted) {
+                    alert('🚫 ACCESS RESTRICTED: During the 6,000 Free Mint phase, ONLY Binance Agentic Wallet is permitted.\n\nStandard Web3 wallets will be unlocked for public mint once all 6,000 free NFTs have been minted!');
+                    return;
+                  }
+                  connectWallet('injected');
                   setWalletModalOpen(false);
                 }}
-                className="group flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 hover:border-purple-400/50 hover:bg-purple-500/5 transition-all text-xs text-left cursor-pointer"
+                className={`group flex items-center justify-between w-full rounded-2xl border p-3.5 transition-all text-xs text-left cursor-pointer ${
+                  !is6kMinted
+                    ? 'border-white/5 bg-white/[0.01] opacity-60 hover:opacity-80 hover:border-amber-500/30'
+                    : 'border-white/10 bg-white/[0.03] hover:border-purple-400/50 hover:bg-purple-500/5'
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <CoinbaseLogoSvg className="h-6 w-6" />
                   </div>
                   <div>
-                    <span className="font-bold text-white group-hover:text-purple-300 transition-colors block">
-                      Coinbase / Injected Web3 Provider
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-white group-hover:text-purple-300 transition-colors block">
+                        Coinbase / Injected Web3 Provider
+                      </span>
+                      {!is6kMinted && (
+                        <span className="rounded bg-slate-800 text-slate-400 border border-white/10 px-1.5 py-0.2 text-[9px] font-bold">
+                          LOCKED (UNTIL 6K MINTED)
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[11px] text-slate-400 block mt-0.5">
-                      EIP-1193 Compatible Wallets & Extensions
+                      {!is6kMinted ? 'Unlocks for public mint once 6,000 free NFTs are minted' : 'EIP-1193 Compatible Wallets & Extensions'}
                     </span>
                   </div>
                 </div>
-                <span className="text-slate-400 group-hover:text-purple-400 font-bold text-xs shrink-0 pl-2 group-hover:translate-x-1 transition-transform">
-                  Connect →
+                <span className="text-slate-400 text-xs shrink-0 pl-2">
+                  {!is6kMinted ? '🔒 Locked' : 'Connect →'}
                 </span>
               </button>
             </div>
 
             {/* Protocol Notice regarding Free Mint & Public Mint Phase */}
-            <div className="mt-5 rounded-2xl border border-cyan-400/30 bg-cyan-950/30 p-3.5 text-[11px] text-slate-300 leading-normal space-y-1">
-              <div className="flex items-center gap-1.5 font-bold text-cyan-300 uppercase">
-                <span>⚡</span>
-                <span>PUBLIC MINT & ALL WALLETS ACCESSIBLE</span>
+            <div className="mt-5 rounded-2xl border border-amber-500/30 bg-amber-950/20 p-3.5 text-[11px] text-slate-300 leading-normal space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-amber-300 uppercase">
+                <span>🛡️</span>
+                <span>AGENT FREE MINT ENFORCEMENT</span>
               </div>
               <p>
-                Holders of verified Binance Agent IDs (<code className="text-cyan-300">.ai</code>) receive 2 free NFTs. <strong>When the free allocation is finished, or for standard public minting, ANY wallet can connect and mint up to 20 NFTs directly at 0.001 BNB!</strong>
+                Until all 6,000 free NFTs are minted, <strong>ONLY Binance Agentic Wallet</strong> is authorized to connect. Once the 6,000 free allocation is completed, all other wallets (MetaMask, OKX, Trust Wallet, Coinbase) will automatically unlock for public minting!
               </p>
             </div>
           </div>

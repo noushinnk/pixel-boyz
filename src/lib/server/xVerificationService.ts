@@ -41,11 +41,11 @@ export function extractUsernameFromUrl(url: string): string | null {
 
 export async function verifyXCampaignPost(params: {
   postUrl: string;
-  walletAddress: string;
+  walletAddress?: string;
   expectedXUserId?: string;
 }): Promise<XVerificationResult> {
   const { postUrl, walletAddress } = params;
-  const normalizedWallet = walletAddress.toLowerCase();
+  const normalizedWallet = walletAddress ? walletAddress.toLowerCase() : '';
 
   // 1. Validate post URL and extract ID
   const postId = extractPostIdFromUrl(postUrl);
@@ -55,6 +55,17 @@ export async function verifyXCampaignPost(params: {
     return {
       success: false,
       error: 'Invalid X post URL. Please submit a valid post link (e.g. https://x.com/your_handle/status/123456789).'
+    };
+  }
+
+  // If wallet is not connected, submission is accepted to unlock prompt
+  if (!normalizedWallet) {
+    return {
+      success: true,
+      postId,
+      postUrl: postUrl.trim(),
+      authorId: authorUsername,
+      authorUsername
     };
   }
 

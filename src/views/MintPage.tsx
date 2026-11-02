@@ -79,6 +79,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
     verifyXCampaignPost,
     getAgenticPrompt,
     mintPixelBoyz,
+    is6kMinted,
     nfts
   } = useWeb3();
 
@@ -554,7 +555,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                   Submit Your X Post Link
                 </label>
                 <p className="text-[11px] font-mono text-slate-400">
-                  Paste the public URL of your published post tagging <strong className="text-cyan-300">@pixelboyzai</strong> to register your submission and unlock your on-chain Merkle free mint proof:
+                  Paste the public URL of your published post tagging <strong className="text-cyan-300">@pixelboyzai</strong> to unlock your Agentic Wallet Mint Prompt & on-chain proof <span className="text-emerald-400 font-bold">(Wallet connection not required)</span>:
                 </p>
                 <input
                   type="text"
@@ -683,11 +684,11 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
 
                 {!isConnected ? (
                   <button
-                    onClick={connectWallet}
+                    onClick={() => connectWallet()}
                     className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-[#F0B90B] to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black px-3.5 py-2 font-mono text-xs font-black uppercase tracking-wider shadow-[0_0_15px_rgba(240,185,11,0.4)] hover:shadow-[0_0_25px_rgba(240,185,11,0.6)] hover:-translate-y-0.5 transition-all cursor-pointer"
                   >
                     <BinanceLogoSvg className="h-4 w-4 shrink-0 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
-                    <span>CONNECT WALLET</span>
+                    <span>{!is6kMinted ? 'CONNECT BINANCE WALLET' : 'CONNECT WALLET'}</span>
                   </button>
                 ) : (
                   <div className="flex items-center gap-2">
@@ -836,11 +837,11 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
 
                 {!isConnected ? (
                   <button
-                    onClick={connectWallet}
+                    onClick={() => connectWallet()}
                     className="w-full flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-[#F0B90B] to-yellow-400 hover:from-amber-400 hover:to-yellow-300 py-4 font-mono text-sm font-black uppercase tracking-wider text-black shadow-[0_0_25px_rgba(240,185,11,0.45)] hover:shadow-[0_0_35px_rgba(240,185,11,0.7)] hover:-translate-y-0.5 transition-all cursor-pointer"
                   >
                     <BinanceLogoSvg className="h-5 w-5 shrink-0 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
-                    <span>CONNECT WALLET (BINANCE / ANY WEB3)</span>
+                    <span>{!is6kMinted ? 'CONNECT BINANCE AGENTIC WALLET' : 'CONNECT WALLET (ALL WALLETS UNLOCKED)'}</span>
                   </button>
                 ) : (
                   <button

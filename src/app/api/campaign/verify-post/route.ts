@@ -8,18 +8,20 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { postUrl, walletAddress, sessionToken } = body;
 
-    if (!walletAddress || !isAddress(walletAddress)) {
-      return NextResponse.json({ error: 'Valid wallet address is required' }, { status: 400 });
-    }
-
     if (!postUrl || typeof postUrl !== 'string') {
       return NextResponse.json({ error: 'Post URL is required' }, { status: 400 });
     }
 
-    const normalizedWallet = walletAddress.toLowerCase();
+    let normalizedWallet: string | undefined = undefined;
+    if (walletAddress && typeof walletAddress === 'string') {
+      if (!isAddress(walletAddress)) {
+        return NextResponse.json({ error: 'Provided wallet address is invalid' }, { status: 400 });
+      }
+      normalizedWallet = walletAddress.toLowerCase();
+    }
 
     // Check optional session token if provided
-    if (sessionToken) {
+    if (sessionToken && normalizedWallet) {
       const boundWallet = db.validateSessionToken(sessionToken);
       if (boundWallet && boundWallet.toLowerCase() !== normalizedWallet) {
         return NextResponse.json({ error: 'Session token does not match provided wallet' }, { status: 403 });

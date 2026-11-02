@@ -102,7 +102,7 @@ export function AdminPage({ navigate }: AdminPageProps) {
           </div>
 
           {!isConnected && (
-            <button onClick={connectWallet} className="neon-button text-xs py-1.5 px-3">
+            <button onClick={() => connectWallet()} className="neon-button text-xs py-1.5 px-3">
               Connect Admin Wallet
             </button>
           )}
