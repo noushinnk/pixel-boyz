@@ -1,4 +1,4 @@
-import { keccak256, encodePacked, isAddress } from 'viem';
+import { keccak256, encodeAbiParameters, encodePacked, isAddress } from 'viem';
 
 /**
  * Merkle Tree and Proof verification for Binance Agentic Wallet Allowlist.
@@ -16,7 +16,9 @@ export const BINANCE_AGENTIC_ALLOWLIST: string[] = configuredAllowlist
  */
 export function hashLeaf(address: string): `0x${string}` {
   const normalized = address.toLowerCase();
-  const innerHash = keccak256(encodePacked(['address'], [normalized as `0x${string}`]));
+  const innerHash = keccak256(
+    encodeAbiParameters([{ type: 'address' }], [normalized as `0x${string}`])
+  );
   return keccak256(encodePacked(['bytes32'], [innerHash]));
 }
 

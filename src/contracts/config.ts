@@ -65,7 +65,7 @@ export const PIXEL_BOYZ_NFT_ABI = [
   },
   {
     type: 'function',
-    name: 'totalSupply',
+    name: 'totalMinted',
     inputs: [],
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view'
@@ -93,14 +93,14 @@ export const PIXEL_BOYZ_NFT_ABI = [
   },
   {
     type: 'function',
-    name: 'freeMinted',
+    name: 'freeMintedByWallet',
     inputs: [{ name: 'account', type: 'address' }],
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view'
   },
   {
     type: 'function',
-    name: 'paidMinted',
+    name: 'paidMintedByWallet',
     inputs: [{ name: 'account', type: 'address' }],
     outputs: [{ name: '', type: 'uint256' }],
     stateMutability: 'view'
@@ -114,14 +114,14 @@ export const PIXEL_BOYZ_NFT_ABI = [
   },
   {
     type: 'function',
-    name: 'freePhaseOpen',
+    name: 'freeSaleActive',
     inputs: [],
     outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'view'
   },
   {
     type: 'function',
-    name: 'publicPhaseOpen',
+    name: 'paidSaleActive',
     inputs: [],
     outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'view'
