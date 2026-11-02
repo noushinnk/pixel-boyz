@@ -285,31 +285,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     const qty = quantity || 2;
     const contract = CONTRACT_CONFIG.nftAddress || '';
 
-    return `PIXEL BOYZ NFT — Free Mint Execution
-Mint ${qty} PIXEL BOYZ NFTs using my currently authenticated wallet.
-Network & Contract
-Network: BNB Smart Chain Mainnet
-Chain ID: 56
-Contract: ${contract}
-Official Portal: [https://www.pixelboyz.shop/mint](https://www.pixelboyz.shop/mint)
-Mint Function: mint(uint256 quantity, bytes32[] proof)
-Quantity: ${qty}
-Expected Price: 0 BNB
-Mandatory Checks
-Verify my authenticated wallet holds a valid Agent ID.
-Retrieve free allocation data directly from the official mint portal.
-Confirm at least ${qty} free allocations are available and unclaimed.
-Verify wallet, contract and network.
-Execution Rules
-Use only my authenticated wallet.
-Do not request Merkle proof or X campaign verification.
-Never fabricate eligibility or bypass contract restrictions.
-Stop if Agent ID or sufficient free allocation is missing.
-Do not proceed with unexpected mint fees.
-Confirmation & Execution
-Before minting, display wallet address, Agent ID status, free allocation data, mint price and estimated gas fee.
-Ask for my explicit confirmation before submitting the transaction.
-After authorization, mint ${qty} NFTs and verify transaction success and NFT ownership on BscScan.`;
+    return `Free-mint ${qty} Pixel Boyz NFTs using only my connected wallet on BNB Chain (56). Contract: ${contract}. First verify wallet/network, Agent ID, unclaimed allocation and live price at https://www.pixelboyz.shop/mint. Don't request proof or X verification, fabricate eligibility, or bypass restrictions. Stop if Agent ID/allocation is insufficient or price is nonzero. Show wallet, eligibility, allocation, price and gas; wait for my explicit approval before signing. Then mint ${qty} and verify the receipt and ownership on BscScan.`;
   };
 
   const getProvider = () => {
