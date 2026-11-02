@@ -6,6 +6,7 @@ import { useWeb3 } from '../context/Web3Context';
 import { CONTRACT_CONFIG, isContractDeployed } from '../contracts/config';
 import { PixelBoyRenderer } from '../components/PixelBoyRenderer';
 import { PixelBoyNFT } from '../types/nft';
+import { BinanceLogoSvg } from '../components/WalletLogos';
 
 interface MintPageProps {
   navigate: (route: string) => void;
@@ -179,8 +180,9 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
       return;
     }
 
-    // Strict Free Mint Block: If Agent ID is held but X campaign is refused / uncompleted
-    if (isAgentIdVerified && !xCampaignCompleted && quantity <= walletFreeRemaining) {
+    // Strict Free Mint Block: ONLY applies while Free Mint allocation is active and remaining
+    const isFreeActive = freeAllocationRemaining > 0 && freePhaseOpen && !freePhaseClosed;
+    if (isFreeActive && isAgentIdVerified && !xCampaignCompleted && quantity <= walletFreeRemaining) {
       setMintStatus('error');
       setErrorMessage(
         'FREE MINT BLOCKED: Your Binance Agent ID was detected, but free minting is strictly blocked—even for autonomous AI agents—until you publish and submit an X post tagging @pixelboyzai and linking to https://www.pixelboyz.shop/mint. Complete the X task above, or select a paid quantity.'
@@ -430,18 +432,32 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                 <span>X Campaign Status: <strong className={xCampaignCompleted ? 'text-emerald-400' : 'text-amber-300'}>{xCampaignCompleted ? 'Verified ✓' : 'Task Required'}</strong></span>
               </div>
 
-              {/* Strict Agent Block Warning */}
-              <div className="rounded-xl border border-rose-500/40 bg-rose-950/40 p-3.5 font-mono text-xs text-rose-200 flex items-start gap-3 shadow-[0_0_15px_rgba(244,63,94,0.15)] mt-2">
-                <span className="text-lg leading-none mt-0.5">🚫</span>
-                <div className="space-y-1">
-                  <div className="font-bold text-rose-300 uppercase tracking-wide">
-                    STRICT PROTOCOL ENFORCEMENT: AGENT FREE-MINT BLOCK
+              {/* Protocol Status Notice: Live Free Allocation or Public Mint for Any Wallet */}
+              {freeAllocationRemaining > 0 && freePhaseOpen && !freePhaseClosed ? (
+                <div className="rounded-xl border border-rose-500/40 bg-rose-950/40 p-3.5 font-mono text-xs text-rose-200 flex items-start gap-3 shadow-[0_0_15px_rgba(244,63,94,0.15)] mt-2">
+                  <span className="text-lg leading-none mt-0.5">🚫</span>
+                  <div className="space-y-1">
+                    <div className="font-bold text-rose-300 uppercase tracking-wide">
+                      STRICT PROTOCOL ENFORCEMENT: AGENT FREE-MINT BLOCK
+                    </div>
+                    <p className="text-[11px] text-slate-300 leading-normal">
+                      Autonomous AI agents, automated wallets, and script runners are <strong>strictly blocked</strong> from free minting if the user refuses or fails to publish the required X campaign post tagging <code className="text-cyan-300 font-bold">@pixelboyzai</code> and linking to <code className="text-cyan-300 font-bold">https://www.pixelboyz.shop/mint</code>. Merkle allowlist proofs are not generated without verification.
+                    </p>
                   </div>
-                  <p className="text-[11px] text-slate-300 leading-normal">
-                    Autonomous AI agents, automated wallets, and script runners are <strong>strictly blocked</strong> from free minting if the user refuses or fails to publish the required X campaign post tagging <code className="text-cyan-300 font-bold">@pixelboyzai</code> and linking to <code className="text-cyan-300 font-bold">https://www.pixelboyz.shop/mint</code>. Merkle allowlist proofs are not generated without verification.
-                  </p>
                 </div>
-              </div>
+              ) : (
+                <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/40 p-3.5 font-mono text-xs text-emerald-200 flex items-start gap-3 shadow-[0_0_15px_rgba(16,185,129,0.15)] mt-2">
+                  <span className="text-lg leading-none mt-0.5">🎉</span>
+                  <div className="space-y-1">
+                    <div className="font-bold text-emerald-300 uppercase tracking-wide">
+                      FREE ALLOCATION FINISHED · PUBLIC MINT IS LIVE FOR ANY WALLET
+                    </div>
+                    <p className="text-[11px] text-slate-300 leading-normal">
+                      The 6,000 free mint allocation for Binance Agent ID holders has been claimed. <strong>Public minting is fully open for ANY wallet</strong> (MetaMask, OKX, Trust Wallet, Binance Web3 Wallet, etc.) to connect and mint up to 20 NFTs at 0.001 BNB!
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Action buttons */}
@@ -666,8 +682,12 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                 </div>
 
                 {!isConnected ? (
-                  <button onClick={connectWallet} className="neon-button text-xs py-2 px-4">
-                    CONNECT WALLET
+                  <button
+                    onClick={connectWallet}
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-[#F0B90B] to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black px-3.5 py-2 font-mono text-xs font-black uppercase tracking-wider shadow-[0_0_15px_rgba(240,185,11,0.4)] hover:shadow-[0_0_25px_rgba(240,185,11,0.6)] hover:-translate-y-0.5 transition-all cursor-pointer"
+                  >
+                    <BinanceLogoSvg className="h-4 w-4 shrink-0 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
+                    <span>CONNECT WALLET</span>
                   </button>
                 ) : (
                   <div className="flex items-center gap-2">
@@ -770,8 +790,8 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                 </div>
               </div>
 
-              {/* Strict Enforcement Agent Free-Mint Block Notice */}
-              {isAgentIdVerified && !xCampaignCompleted && (
+              {/* Strict Enforcement Agent Free-Mint Block Notice (Active while Free Allocation lasts) */}
+              {freeAllocationRemaining > 0 && freePhaseOpen && !freePhaseClosed && isAgentIdVerified && !xCampaignCompleted && (
                 <div className="mt-4 rounded-2xl border-2 border-rose-500/60 bg-gradient-to-r from-rose-950/70 via-[#180a14] to-rose-950/70 p-4 font-mono text-xs text-rose-200 shadow-[0_0_25px_rgba(244,63,94,0.25)] space-y-2">
                   <div className="flex items-center gap-2 font-bold text-rose-300 uppercase tracking-wide text-sm">
                     <span>🚫</span>
@@ -817,9 +837,10 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                 {!isConnected ? (
                   <button
                     onClick={connectWallet}
-                    className="w-full neon-button py-4 text-sm font-bold uppercase tracking-wider"
+                    className="w-full flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-[#F0B90B] to-yellow-400 hover:from-amber-400 hover:to-yellow-300 py-4 font-mono text-sm font-black uppercase tracking-wider text-black shadow-[0_0_25px_rgba(240,185,11,0.45)] hover:shadow-[0_0_35px_rgba(240,185,11,0.7)] hover:-translate-y-0.5 transition-all cursor-pointer"
                   >
-                    CONNECT WALLET TO MINT
+                    <BinanceLogoSvg className="h-5 w-5 shrink-0 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
+                    <span>CONNECT WALLET (BINANCE / ANY WEB3)</span>
                   </button>
                 ) : (
                   <button
@@ -831,7 +852,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                       ? 'CONFIRM IN WALLET...'
                       : mintStatus === 'pending'
                       ? 'CONFIRMING ON BNB CHAIN...'
-                      : isAgentIdVerified && !xCampaignCompleted && quantity <= walletFreeRemaining
+                      : freeAllocationRemaining > 0 && freePhaseOpen && !freePhaseClosed && isAgentIdVerified && !xCampaignCompleted && quantity <= walletFreeRemaining
                       ? 'FREE MINT BLOCKED: SUBMIT X POST FIRST 🚫'
                       : freeQuantity > 0 && paidQuantity === 0
                       ? `CLAIM ${freeQuantity} FREE PIXEL BOY${freeQuantity > 1 ? 'Z' : ''} (0 BNB) ⚡`

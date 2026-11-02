@@ -4,6 +4,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useWeb3 } from '../context/Web3Context';
 import { CONTRACT_CONFIG, BSC_MAINNET_CHAIN_ID } from '../contracts/config';
+import {
+  BinanceLogoSvg,
+  MetaMaskLogoSvg,
+  TrustWalletLogoSvg,
+  OKXLogoSvg,
+  CoinbaseLogoSvg,
+  Web3GenericLogoSvg
+} from './WalletLogos';
 
 interface NavbarProps {
   currentRoute: string;
@@ -240,9 +248,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                 type="button"
                 onClick={() => setWalletModalOpen(true)}
                 disabled={isConnecting}
-                className="neon-button text-[11px] sm:text-xs py-1.5 sm:py-2 px-2.5 sm:px-4 shrink-0 whitespace-nowrap cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-[#F0B90B] to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black px-3 sm:px-4 py-1.5 sm:py-2 font-mono text-[11px] sm:text-xs font-black uppercase tracking-wider shadow-[0_0_20px_rgba(240,185,11,0.45)] hover:shadow-[0_0_30px_rgba(240,185,11,0.7)] hover:-translate-y-0.5 transition-all cursor-pointer shrink-0"
               >
-                {isConnecting ? 'CONNECTING...' : 'CONNECT'}
+                <BinanceLogoSvg className="h-4 w-4 shrink-0 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
+                <span>{isConnecting ? 'CONNECTING...' : 'CONNECT WALLET'}</span>
               </button>
             ) : (
               <div className="relative shrink-0">
@@ -396,76 +405,180 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
       {/* Wallet Connection Modal */}
       {walletModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-md rounded-3xl border border-cyan-400/40 bg-[#0b0f24] p-6 shadow-2xl font-mono">
+          <div className="w-full max-w-lg rounded-3xl border border-white/15 bg-[#0b0f24] p-6 sm:p-7 shadow-2xl font-mono relative overflow-hidden">
+            {/* Top decorative glow */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-[#F0B90B] to-cyan-400" />
+
             <div className="flex items-center justify-between pb-4 border-b border-white/10">
-              <span className="font-display text-base font-bold text-white">
-                CONNECT WEB3 WALLET
-              </span>
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                  <BinanceLogoSvg className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="font-display text-base font-bold text-white block">
+                    CONNECT WEB3 WALLET
+                  </span>
+                  <span className="text-[10px] text-slate-400">BNB SMART CHAIN · CHAIN ID: 56</span>
+                </div>
+              </div>
               <button
                 onClick={() => setWalletModalOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="h-8 w-8 rounded-xl border border-white/10 hover:border-white/30 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
               >
                 ✕
               </button>
             </div>
 
-            <p className="mt-4 text-xs text-slate-400">
-              Connect via Binance Agentic Wallet (eligible for 2 free mints) or standard injected provider:
+            <p className="mt-4 text-xs text-slate-300 leading-relaxed">
+              Connect your authenticated wallet to claim your allocation or trade on BNB Chain:
             </p>
 
-            <div className="mt-5 space-y-3">
+            <div className="mt-4 space-y-2.5">
+              {/* Option 1: Binance Web3 / Agentic Wallet */}
               <button
                 onClick={() => {
                   connectWallet();
                   setWalletModalOpen(false);
                 }}
-                className="flex items-center justify-between w-full rounded-xl border border-white/10 bg-white/5 p-3.5 hover:border-cyan-400/50 hover:bg-cyan-500/10 transition-all text-xs"
+                className="group flex items-center justify-between w-full rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-950/30 to-[#0e1530] p-3.5 hover:border-amber-400 hover:shadow-[0_0_20px_rgba(240,185,11,0.2)] transition-all text-xs text-left cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">🦊</span>
-                  <div className="text-left">
-                    <span className="font-bold text-white block">Browser Injected / MetaMask</span>
-                    <span className="text-[10px] text-slate-400">BNB Smart Chain (ID: 56)</span>
+                  <div className="h-10 w-10 rounded-xl bg-black/60 border border-amber-500/30 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <BinanceLogoSvg className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-white group-hover:text-amber-300 transition-colors">
+                        Binance Web3 / Agentic Wallet
+                      </span>
+                      <span className="rounded bg-amber-400/20 text-[#F0B90B] border border-amber-400/40 px-1.5 py-0.2 text-[9px] font-bold">
+                        RECOMMENDED
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-400 block mt-0.5">
+                      BNB Chain Native · 2 Free Mints for Verified (.ai) Holders
+                    </span>
                   </div>
                 </div>
-                <span className="text-cyan-400 text-xs">Connect →</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  connectWallet();
-                  setWalletModalOpen(false);
-                }}
-                className="flex items-center justify-between w-full rounded-xl border border-cyan-400/40 bg-cyan-950/30 p-3.5 hover:bg-cyan-900/40 transition-all text-xs"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">🤖</span>
-                  <div className="text-left">
-                    <span className="font-bold text-cyan-300 block">Binance Agentic Wallet</span>
-                    <span className="text-[10px] text-cyan-400/80">✓ 2 Free Mints Eligible</span>
-                  </div>
-                </div>
-                <span className="rounded bg-cyan-400/20 px-2 py-0.5 text-[9px] font-bold text-cyan-300">
-                  Allowlisted →
+                <span className="text-amber-400 font-bold text-xs shrink-0 pl-2 group-hover:translate-x-1 transition-transform">
+                  Connect →
                 </span>
               </button>
 
+              {/* Option 2: MetaMask */}
               <button
                 onClick={() => {
                   connectWallet();
                   setWalletModalOpen(false);
                 }}
-                className="flex items-center justify-between w-full rounded-xl border border-white/10 bg-white/5 p-3.5 hover:bg-white/10 transition-all text-xs"
+                className="group flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 hover:border-orange-500/50 hover:bg-orange-500/5 transition-all text-xs text-left cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">👛</span>
-                  <div className="text-left">
-                    <span className="font-bold text-slate-200 block">Standard Web3 Wallet</span>
-                    <span className="text-[10px] text-slate-400">Paid Public Mint (contract price)</span>
+                  <div className="h-10 w-10 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <MetaMaskLogoSvg className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-white group-hover:text-orange-300 transition-colors block">
+                      MetaMask
+                    </span>
+                    <span className="text-[11px] text-slate-400 block mt-0.5">
+                      Browser Extension & Mobile Dapp Browser
+                    </span>
                   </div>
                 </div>
-                <span className="text-slate-400 text-xs">Connect →</span>
+                <span className="text-slate-400 group-hover:text-orange-400 font-bold text-xs shrink-0 pl-2 group-hover:translate-x-1 transition-transform">
+                  Connect →
+                </span>
               </button>
+
+              {/* Option 3: Trust Wallet */}
+              <button
+                onClick={() => {
+                  connectWallet();
+                  setWalletModalOpen(false);
+                }}
+                className="group flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all text-xs text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <TrustWalletLogoSvg className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-white group-hover:text-blue-300 transition-colors block">
+                      Trust Wallet
+                    </span>
+                    <span className="text-[11px] text-slate-400 block mt-0.5">
+                      Binance Official Partner Multi-Chain Wallet
+                    </span>
+                  </div>
+                </div>
+                <span className="text-slate-400 group-hover:text-blue-400 font-bold text-xs shrink-0 pl-2 group-hover:translate-x-1 transition-transform">
+                  Connect →
+                </span>
+              </button>
+
+              {/* Option 4: OKX Wallet */}
+              <button
+                onClick={() => {
+                  connectWallet();
+                  setWalletModalOpen(false);
+                }}
+                className="group flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 hover:border-cyan-400/50 hover:bg-cyan-500/5 transition-all text-xs text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <OKXLogoSvg className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-white group-hover:text-cyan-300 transition-colors block">
+                      OKX Wallet
+                    </span>
+                    <span className="text-[11px] text-slate-400 block mt-0.5">
+                      Multi-Chain Web3 & Smart Account Wallet
+                    </span>
+                  </div>
+                </div>
+                <span className="text-slate-400 group-hover:text-cyan-400 font-bold text-xs shrink-0 pl-2 group-hover:translate-x-1 transition-transform">
+                  Connect →
+                </span>
+              </button>
+
+              {/* Option 5: Any Injected Web3 / Browser Wallet */}
+              <button
+                onClick={() => {
+                  connectWallet();
+                  setWalletModalOpen(false);
+                }}
+                className="group flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 hover:border-purple-400/50 hover:bg-purple-500/5 transition-all text-xs text-left cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <CoinbaseLogoSvg className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-white group-hover:text-purple-300 transition-colors block">
+                      Coinbase / Injected Web3 Provider
+                    </span>
+                    <span className="text-[11px] text-slate-400 block mt-0.5">
+                      EIP-1193 Compatible Wallets & Extensions
+                    </span>
+                  </div>
+                </div>
+                <span className="text-slate-400 group-hover:text-purple-400 font-bold text-xs shrink-0 pl-2 group-hover:translate-x-1 transition-transform">
+                  Connect →
+                </span>
+              </button>
+            </div>
+
+            {/* Protocol Notice regarding Free Mint & Public Mint Phase */}
+            <div className="mt-5 rounded-2xl border border-cyan-400/30 bg-cyan-950/30 p-3.5 text-[11px] text-slate-300 leading-normal space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-cyan-300 uppercase">
+                <span>⚡</span>
+                <span>PUBLIC MINT & ALL WALLETS ACCESSIBLE</span>
+              </div>
+              <p>
+                Holders of verified Binance Agent IDs (<code className="text-cyan-300">.ai</code>) receive 2 free NFTs. <strong>When the free allocation is finished, or for standard public minting, ANY wallet can connect and mint up to 20 NFTs directly at 0.001 BNB!</strong>
+              </p>
             </div>
           </div>
         </div>
