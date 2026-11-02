@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useWeb3 } from '../context/Web3Context';
 import { CONTRACT_CONFIG, BSC_MAINNET_CHAIN_ID } from '../contracts/config';
-import { BINANCE_AGENTIC_ALLOWLIST } from '../lib/merkle';
 
 interface NavbarProps {
   currentRoute: string;
@@ -19,7 +18,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
     isConnecting,
     isBinanceAgenticWallet,
     connectWallet,
-    connectSandboxWallet,
     disconnectWallet,
     switchNetwork,
     userProfile
@@ -418,7 +416,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
 
               <button
                 onClick={() => {
-                  connectSandboxWallet(BINANCE_AGENTIC_ALLOWLIST[0]);
                   setWalletModalOpen(false);
                 }}
                 className="flex items-center justify-between w-full rounded-xl border border-cyan-400/40 bg-cyan-950/30 p-3.5 hover:bg-cyan-900/40 transition-all text-xs"
@@ -437,7 +434,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
 
               <button
                 onClick={() => {
-                  connectSandboxWallet('0x1111222233334444555566667777888899990000');
                   setWalletModalOpen(false);
                 }}
                 className="flex items-center justify-between w-full rounded-xl border border-white/10 bg-white/5 p-3.5 hover:bg-white/10 transition-all text-xs"

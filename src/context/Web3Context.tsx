@@ -15,13 +15,7 @@ import {
   isContractDeployed
 } from '../contracts/config';
 import { checkAllowlistEligibility, officialMerkleTree } from '../lib/merkle';
-import {
-  INITIAL_NFTS,
-  INITIAL_QUESTS,
-  INITIAL_ACTIVITY,
-  ARCHETYPES,
-  TRAIT_OPTIONS
-} from '../data/collectionData';
+import { ARCHETYPES, TRAIT_OPTIONS } from '../data/collectionData';
 
 interface Web3ContextType {
   // Wallet State
@@ -39,7 +33,6 @@ interface Web3ContextType {
 
   // Connection handlers
   connectWallet: () => Promise<void>;
-  connectSandboxWallet: (address?: string) => void;
   disconnectWallet: () => void;
   switchNetwork: (targetChainId?: number) => Promise<void>;
 
@@ -85,68 +78,34 @@ const Web3Context = createContext<Web3ContextType | undefined>(undefined);
 export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [account, setAccount] = useState<string | null>(null);
   const [chainId, setChainId] = useState<number | null>(BSC_MAINNET_CHAIN_ID);
-  const [balanceBnb, setBalanceBnb] = useState<string>('0.000');
+  const [balanceBnb, setBalanceBnb] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
 
   // Mint phase & state
-  const [freePhaseOpen, setFreePhaseOpen] = useState<boolean>(true);
-  const [publicPhaseOpen, setPublicPhaseOpen] = useState<boolean>(true);
-  const [currentMintPriceBnb, setCurrentMintPriceBnb] = useState<string>(CONTRACT_CONFIG.mintPriceBnb);
+  const [freePhaseOpen, setFreePhaseOpen] = useState<boolean>(false);
+  const [publicPhaseOpen, setPublicPhaseOpen] = useState<boolean>(false);
+  const [currentMintPriceBnb, setCurrentMintPriceBnb] = useState<string>('');
 
   // Collection State (Deterministic initial render matching SSR)
-  const [nfts, setNfts] = useState<PixelBoyNFT[]>(INITIAL_NFTS);
-  const [quests, setQuests] = useState<Quest[]>(INITIAL_QUESTS);
-  const [activity, setActivity] = useState<ActivityEvent[]>(INITIAL_ACTIVITY);
-  const [rewardsPoolBnb, setRewardsPoolBnb] = useState<string>('4.850');
+  const [nfts, setNfts] = useState<PixelBoyNFT[]>([]);
+  const [quests, setQuests] = useState<Quest[]>([]);
+  const [activity, setActivity] = useState<ActivityEvent[]>([]);
+  const [rewardsPoolBnb, setRewardsPoolBnb] = useState<string>('');
   const [claimedFreeMintsByWallet, setClaimedFreeMintsByWallet] = useState<Record<string, number>>({});
   const [paidMintsByWallet, setPaidMintsByWallet] = useState<Record<string, number>>({});
 
   // Profile
   const [userProfile, setUserProfile] = useState<UserProfile>({
     address: '',
-    username: 'PixelPilot',
-    avatarTokenId: 1,
-    xp: 250,
-    bio: 'Decentralized operative on BNB Smart Chain.',
-    joinedAt: 1730000000000,
+    username: '',
+    avatarTokenId: 0,
+    xp: 0,
+    bio: '',
+    joinedAt: 0,
     claimedEpochs: [],
-    completedQuests: ['q1']
+    completedQuests: []
   });
 
-  // Client-side hydration of localStorage on mount
-  useEffect(() => {
-    try {
-      const savedNfts = localStorage.getItem('pixel_boyz_nfts_v2');
-      if (savedNfts) setNfts(JSON.parse(savedNfts));
-
-      const savedQuests = localStorage.getItem('pixel_boyz_quests_v2');
-      if (savedQuests) setQuests(JSON.parse(savedQuests));
-
-      const savedActivity = localStorage.getItem('pixel_boyz_activity_v2');
-      if (savedActivity) setActivity(JSON.parse(savedActivity));
-    } catch (e) {
-      /* ignore storage parsing errors */
-    }
-  }, []);
-
-  // Save changes to localStorage (browser only)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('pixel_boyz_nfts_v2', JSON.stringify(nfts));
-    }
-  }, [nfts]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('pixel_boyz_quests_v2', JSON.stringify(quests));
-    }
-  }, [quests]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('pixel_boyz_activity_v2', JSON.stringify(activity));
-    }
-  }, [activity]);
 
   // Check allowlist status of current account
   const allowlistEligibility = checkAllowlistEligibility(account);
@@ -156,7 +115,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   const isLiveContractActive = isContractDeployed('nft');
 
   // Total calculations (100% Real, zero demo additions)
-  const totalMinted = nfts.length;
+  const totalMinted = 0;
   const freeMintedCount = nfts.filter(n => n.history.some(h => h.type === 'mint' && (!h.price || h.price === '0' || h.price === '0.000'))).length;
   const paidMintedCount = nfts.filter(n => n.history.some(h => h.type === 'mint' && Number(h.price) > 0)).length;
 
@@ -164,9 +123,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   const userNfts = account ? nfts.filter(n => n.owner.toLowerCase() === account.toLowerCase()) : [];
 
   // Calculate user's claimable BNB based on their XP share
-  const communityXp = 125000;
-  const userShare = userProfile.xp / (communityXp + userProfile.xp);
-  const userClaimableBnb = (parseFloat(rewardsPoolBnb) * userShare).toFixed(4);
+  const userClaimableBnb = '';
+  const liveConfigurationError = 'This action is unavailable until deployed contracts and the indexer are configured.';
 
   // Injected wallet event listener
   useEffect(() => {
@@ -210,17 +168,15 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
       } }).ethereum;
 
       if (!eth) {
-        // Fallback to Sandbox connection if no browser extension is detected in iframe
-        connectSandboxWallet('0x8894e0a0c962cb723c1976a4421c95949be2d4e3');
-        setIsConnecting(false);
-        return;
+        throw new Error('No compatible wallet provider detected.');
       }
 
       const accounts = (await eth.request({ method: 'eth_requestAccounts' })) as string[];
       if (accounts && accounts.length > 0) {
         setAccount(accounts[0]);
         setUserProfile(prev => ({ ...prev, address: accounts[0] }));
-        setBalanceBnb('1.450');
+        const balanceHex = await eth.request({ method: 'eth_getBalance', params: [accounts[0], 'latest'] }) as string;
+        setBalanceBnb((Number.parseInt(balanceHex, 16) / 1e18).toFixed(4));
 
         // Check chainId
         const currentChainHex = (await eth.request({ method: 'eth_chainId' })) as string;
@@ -231,25 +187,12 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
           await switchNetwork(BSC_MAINNET_CHAIN_ID);
         }
 
-        // Complete quest q1
-        triggerQuestProgress('q1', 1);
       }
     } catch (err) {
       console.warn('Wallet connection request rejected or failed:', err);
     } finally {
       setIsConnecting(false);
     }
-  };
-
-  // Sandbox Wallet connection for instant testing & allowlist simulation
-  const connectSandboxWallet = (preferredAddress?: string) => {
-    // Default to a verified Binance Agentic Wallet address from Merkle allowlist
-    const target = preferredAddress || '0x8894e0a0c962cb723c1976a4421c95949be2d4e3';
-    setAccount(target);
-    setChainId(BSC_MAINNET_CHAIN_ID);
-    setBalanceBnb('2.500');
-    setUserProfile(prev => ({ ...prev, address: target }));
-    triggerQuestProgress('q1', 1);
   };
 
   const disconnectWallet = () => {
@@ -261,10 +204,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
       request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
     } }).ethereum;
 
-    if (!eth) {
-      setChainId(targetChainId);
-      return;
-    }
+    if (!eth) throw new Error('No compatible wallet provider detected.');
 
     const hexChain = `0x${targetChainId.toString(16)}`;
     try {
@@ -316,6 +256,9 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Mint Execution
   const mintPixelBoyz = async (quantity: number) => {
+    return { success: false, error: liveConfigurationError };
+    /* Live mint contract integration is required before this action is enabled. */
+    if (!isContractDeployed('nft')) return { success: false, error: liveConfigurationError };
     if (!account) {
       return { success: false, error: 'Wallet not connected. Please connect your BNB Chain wallet first.' };
     }
@@ -454,6 +397,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // List NFT
   const listNftForSale = async (tokenId: number, priceBnb: string) => {
+    return { success: false, error: liveConfigurationError };
+    if (!isContractDeployed('marketplace')) return { success: false, error: liveConfigurationError };
     if (!account) return { success: false, error: 'Connect wallet to list.' };
     const numPrice = parseFloat(priceBnb);
     if (isNaN(numPrice) || numPrice <= 0) return { success: false, error: 'Enter a valid BNB price.' };
@@ -506,6 +451,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Cancel Listing
   const cancelNftListing = async (tokenId: number) => {
+    return { success: false, error: liveConfigurationError };
+    if (!isContractDeployed('marketplace')) return { success: false, error: liveConfigurationError };
     if (!account) return { success: false, error: 'Connect wallet.' };
     const txHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
 
@@ -528,6 +475,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Buy NFT
   const buyNftFromMarketplace = async (tokenId: number) => {
+    return { success: false, error: liveConfigurationError };
+    if (!isContractDeployed('marketplace')) return { success: false, error: liveConfigurationError };
     if (!account) return { success: false, error: 'Connect wallet to purchase.' };
     const target = nfts.find(n => n.id === tokenId);
     if (!target || !target.isListed || !target.price) {
@@ -597,6 +546,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Make Offer
   const makeOfferOnNft = async (tokenId: number, amountBnb: string) => {
+    return { success: false, error: liveConfigurationError };
+    if (!isContractDeployed('marketplace')) return { success: false, error: liveConfigurationError };
     if (!account) return { success: false, error: 'Connect wallet to make an offer.' };
     const txHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
 
@@ -635,6 +586,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Accept Offer
   const acceptNftOffer = async (tokenId: number) => {
+    return { success: false, error: liveConfigurationError };
     if (!account) return { success: false, error: 'Connect wallet.' };
     const target = nfts.find(n => n.id === tokenId);
     if (!target || !target.highestOffer) {
@@ -677,6 +629,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Forge 2 NFTs: Combine Token A + Token B (Token B burned permanently, Token A upgrades Level and traits)
   const forgeNfts = async (tokenAId: number, tokenBId: number) => {
+    return { success: false, error: liveConfigurationError };
+    if (!isContractDeployed('forge')) return { success: false, error: liveConfigurationError };
     if (!account) return { success: false, error: 'Connect wallet to enter Forge.' };
     if (tokenAId === tokenBId) return { success: false, error: 'Cannot forge an NFT with itself.' };
 
@@ -752,22 +706,13 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Claim Quest Reward
   const claimQuest = (questId: string) => {
-    const q = quests.find(item => item.id === questId);
-    if (!q || !q.isCompleted || q.isClaimed) return;
-
-    setQuests(prev =>
-      prev.map(item => (item.id === questId ? { ...item, isClaimed: true } : item))
-    );
-
-    setUserProfile(prev => ({
-      ...prev,
-      xp: prev.xp + q.xpReward,
-      completedQuests: [...prev.completedQuests, questId]
-    }));
+    void questId;
   };
 
   // Claim Rewards Pool
   const claimRewardsPool = async (epoch: number) => {
+    return { success: false, error: liveConfigurationError };
+    if (!isContractDeployed('rewards')) return { success: false, error: liveConfigurationError };
     if (!account) return { success: false, error: 'Connect wallet.' };
     const amount = userClaimableBnb;
     if (parseFloat(amount) <= 0) return { success: false, error: 'No claimable BNB in current epoch.' };
@@ -828,7 +773,6 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         isBinanceAgenticWallet,
         allowlistEligibility,
         connectWallet,
-        connectSandboxWallet,
         disconnectWallet,
         switchNetwork,
         nfts,

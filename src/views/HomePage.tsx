@@ -238,7 +238,13 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
               </div>
 
               <div className="mt-4">
-                <PixelBoyRenderer nft={nfts[1] || nfts[0]} size="md" />
+                {nfts[1] || nfts[0] ? (
+                  <PixelBoyRenderer nft={nfts[1] || nfts[0]} size="md" />
+                ) : (
+                  <div className="flex aspect-square items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] text-center font-mono text-xs text-slate-500">
+                    LIVE INDEXER DATA REQUIRED
+                  </div>
+                )}
               </div>
 
               <div className="mt-4 rounded-2xl bg-white/[0.02] p-3 sm:p-4 border border-white/5 space-y-3 font-mono text-xs">

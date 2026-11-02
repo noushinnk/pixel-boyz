@@ -6,7 +6,6 @@ import { useWeb3 } from '../context/Web3Context';
 import { CONTRACT_CONFIG, isContractDeployed } from '../contracts/config';
 import { PixelBoyRenderer } from '../components/PixelBoyRenderer';
 import { PixelBoyNFT } from '../types/nft';
-import { BINANCE_AGENTIC_ALLOWLIST } from '../lib/merkle';
 
 interface MintPageProps {
   navigate: (route: string) => void;
@@ -18,7 +17,6 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
     balanceBnb,
     isConnected,
     connectWallet,
-    connectSandboxWallet,
     allowlistEligibility,
     totalMinted,
     freeMintedCount,
@@ -213,22 +211,6 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                   )}
                 </div>
 
-                {/* Allowlist Test Switcher */}
-                <div className="shrink-0 flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-mono text-slate-500 uppercase">Test Simulator:</span>
-                  <button
-                    onClick={() => connectSandboxWallet(BINANCE_AGENTIC_ALLOWLIST[0])}
-                    className="rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-[11px] font-mono font-bold text-cyan-300 hover:bg-cyan-400/20 transition-all"
-                  >
-                    Switch to Agentic Wallet (2 Free)
-                  </button>
-                  <button
-                    onClick={() => connectSandboxWallet('0x1111222233334444555566667777888899990000')}
-                    className="rounded-xl border border-slate-700 bg-white/5 px-3 py-2 text-[11px] font-mono text-slate-300 hover:bg-white/10 transition-all"
-                  >
-                    Standard Wallet (0.001 BNB)
-                  </button>
-                </div>
               </div>
             </div>
           )}
@@ -239,7 +221,13 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
           {/* Left Column: NFT Preview & Collection Metrics */}
           <div className="lg:col-span-5 space-y-6">
             <div className="rounded-3xl border border-white/10 bg-[#0d1226]/80 p-5 shadow-2xl backdrop-blur-xl">
-              <PixelBoyRenderer nft={previewNft} size="hero" showBadge={false} hideTokenId={true} hideRarity={true} />
+              {previewNft ? (
+                <PixelBoyRenderer nft={previewNft} size="hero" showBadge={false} hideTokenId={true} hideRarity={true} />
+              ) : (
+                <div className="flex aspect-square items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] text-center font-mono text-xs text-slate-500">
+                  LIVE INDEXER DATA REQUIRED
+                </div>
+              )}
               <div className="mt-4 flex items-center justify-between text-xs font-mono text-slate-400 px-2">
                 <span className="text-cyan-300 font-bold">PIXEL BOY ORIGIN SPECIMEN</span>
                 <span className="text-slate-400">ERC-721 · BNB CHAIN</span>

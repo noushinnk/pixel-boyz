@@ -5,21 +5,10 @@ import { keccak256, encodePacked, isAddress } from 'viem';
  * Guarantees cryptographic proof verification on-chain & off-chain.
  */
 
-// Sample list of verified Binance Agentic Wallet allowlisted addresses
-export const BINANCE_AGENTIC_ALLOWLIST: string[] = [
-  '0x8894e0a0c962cb723c1976a4421c95949be2d4e3',
-  '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be',
-  '0xd551234ae421e3bcba99a0da6d736074996512e6',
-  '0x564286362092d8e7936f0549571a803b203aacea',
-  '0x06959153b974d0d5f7de8335b36ab3ab691a5554',
-  '0xf977814e90da44bfa03b6295a0616a897441acec',
-  '0x1062a747393198f70f71ec65a582423dba7e5ab3',
-  '0x28c6c06298d514db089934071355e5743bf21d60',
-  '0x21a31ee1afc51d94c2efccaa2092ad1028285549',
-  '0xdfd5293d8e347dff59e457140071e1f36f1c979d',
-  '0xa7efae728d2936e78bda97dc267687568dd593f3',
-  '0x72a53cd2225a92fe1b30319266683f5e94afe779'
-];
+const configuredAllowlist = process.env.NEXT_PUBLIC_AGENTIC_ALLOWLIST;
+export const BINANCE_AGENTIC_ALLOWLIST: string[] = configuredAllowlist
+  ? configuredAllowlist.split(',').map((address) => address.trim()).filter(Boolean)
+  : [];
 
 /**
  * Hash an address leaf according to OpenZeppelin MerkleProof standard:
