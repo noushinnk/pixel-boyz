@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useState } from "react";
 
-const navItems = ["Mint", "Explore", "Marketplace", "Forge", "Rewards", "Quests"];
+const navItems = ["Mint", "Explore", "Marketplace", "Forge", "Rewards", "Quests", "Activity"];
 const stats = [
   ["TOTAL SUPPLY", "10,000"],
   ["MINTED", "—"],
   ["FLOOR PRICE", "—"],
   ["HOLDERS", "—"],
 ];
-const features = [
+export const features = [
   { icon: "✦", title: "MINT", text: "Claim your place in the universe. Free allocation and public mint phases, powered by BSC." },
   { icon: "◈", title: "COLLECT", text: "Discover characters with rare traits, evolving levels, and a story still being written." },
   { icon: "⚡", title: "EVOLVE", text: "Forge your Pixel Boyz, earn XP, and unlock new ways to participate." },
@@ -26,7 +26,7 @@ export function SiteShell({ active = "Home", children }: { active?: string; chil
             <span className="brand-mark">PB</span>
             <span className="font-display text-sm font-bold tracking-[0.22em]">PIXEL BOYZ</span>
           </Link>
-          <nav className="hidden items-center gap-7 md:flex">
+          <nav className="hidden items-center gap-5 lg:gap-7 md:flex">
             {["Home", ...navItems].map((item) => (
               <Link key={item} href={item === "Home" ? "/" : `/${item.toLowerCase()}`} className={`nav-link ${active === item ? "text-white" : ""}`}>{item}</Link>
             ))}
@@ -77,4 +77,20 @@ function HomeContent() {
 
 export function ModulePage({ title, kicker, description, active }: { title: string; kicker: string; description: string; active: string }) {
   return <SiteShell active={active}><main className="mx-auto min-h-[750px] max-w-7xl px-5 pb-24 pt-40 lg:px-8"><div className="eyebrow">{kicker}</div><h1 className="mt-5 max-w-3xl font-display text-5xl font-black uppercase sm:text-7xl">{title}</h1><p className="mt-6 max-w-xl text-lg leading-8 text-slate-400">{description}</p><div className="mt-12 grid gap-5 md:grid-cols-3"><div className="feature-card md:col-span-2"><div className="flex items-center justify-between"><span className="font-display text-sm tracking-widest text-cyan-300">ON-CHAIN DATA</span><span className="status-pill">CONFIG REQUIRED</span></div><div className="mt-10 border-t border-white/10 pt-6 text-slate-400">Connect your wallet and configure deployed contract addresses to view live blockchain data.</div></div><div className="feature-card"><div className="feature-icon">◈</div><h3 className="mt-6 font-display text-lg font-bold tracking-widest">BUILT FOR BSC</h3><p className="mt-3 text-sm leading-6 text-slate-400">BNB Smart Chain · Chain ID 56</p></div></div></main></SiteShell>;
+}
+
+export function SectionHeading({ kicker, title, text }: { kicker: string; title: string; text?: string }) {
+  return <div className="max-w-2xl"><div className="eyebrow">{kicker}</div><h1 className="mt-4 font-display text-4xl font-black uppercase sm:text-6xl">{title}</h1>{text && <p className="mt-5 leading-8 text-slate-400">{text}</p>}</div>;
+}
+
+export function ConfigNotice({ title = "Live data is not connected" }: { title?: string }) {
+  return <div className="rounded-2xl border border-fuchsia-300/20 bg-fuchsia-300/5 p-5"><div className="flex items-start gap-3"><span className="text-xl text-fuchsia-300">◎</span><div><h3 className="font-display text-sm font-bold tracking-widest text-fuchsia-200">{title}</h3><p className="mt-2 text-sm leading-6 text-slate-400">Add deployed contract addresses, ABIs, and the configured data service to enable this action. Nothing here is simulated.</p></div></div></div>;
+}
+
+export function StatCard({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return <div className="feature-card"><div className="text-[10px] tracking-[.2em] text-slate-500">{label}</div><div className="mt-4 font-display text-3xl font-bold">{value}</div><div className="mt-2 text-xs text-cyan-300">{detail}</div></div>;
+}
+
+export function ActionButton({ children, disabled = true }: { children: React.ReactNode; disabled?: boolean }) {
+  return <button disabled={disabled} className="neon-button disabled:cursor-not-allowed disabled:opacity-45 disabled:grayscale">{children}</button>;
 }
