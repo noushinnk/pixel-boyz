@@ -265,7 +265,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const getAgenticPrompt = (quantity: number = 2): string => {
     const qty = quantity || 2;
-    const contract = CONTRACT_CONFIG.nftAddress || '0x5Fe0aaD20857322E93fFB97dF82c952e58234799';
+    const contract = CONTRACT_CONFIG.nftAddress || '';
 
     return `PIXEL BOYZ NFT — Free Mint Execution
 Mint ${qty} PIXEL BOYZ NFTs using my currently authenticated wallet.

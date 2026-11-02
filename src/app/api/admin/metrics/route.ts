@@ -7,8 +7,9 @@ import { CONTRACT_CONFIG, PIXEL_BOYZ_NFT_ABI } from '@/contracts/config';
 export async function GET(req: Request) {
   try {
     const nftAddr = CONTRACT_CONFIG.nftAddress as `0x${string}`;
+    const isDeployed = Boolean(nftAddr && nftAddr.startsWith('0x'));
 
-    // Read contract values directly
+    // Read contract values directly if deployed
     const [
       totalMinted,
       totalFreeMinted,
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
       paidAllocationRemaining,
       remainingSupply,
       onChainMerkleRoot
-    ] = await Promise.all([
+    ] = isDeployed ? await Promise.all([
       (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'totalMinted' }).catch(() => 0n),
       (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'totalFreeMinted' }).catch(() => 0n),
       (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'totalPaidMinted' }).catch(() => 0n),
@@ -27,7 +28,7 @@ export async function GET(req: Request) {
       (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'paidAllocationRemaining' }).catch(() => 4000n),
       (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'remainingSupply' }).catch(() => 10000n),
       (bscPublicClient.readContract as any)({ address: nftAddr, abi: PIXEL_BOYZ_NFT_ABI, functionName: 'merkleRoot' }).catch(() => '0x0000000000000000000000000000000000000000000000000000000000000000')
-    ]);
+    ]) : [0n, 0n, 0n, 4000n, 6000n, 4000n, 10000n, '0x0000000000000000000000000000000000000000000000000000000000000000'];
 
     // Database metrics
     const metrics = db.getMetrics();

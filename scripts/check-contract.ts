@@ -13,7 +13,7 @@ const client = createPublicClient({
   transport: fallback(rpcUrls.map(url => http(url)))
 });
 
-const contractAddress = '0x5Fe0aaD20857322E93fFB97dF82c952e58234799';
+const contractAddress = '';
 
 const abi = [
   { name: 'totalMinted', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },

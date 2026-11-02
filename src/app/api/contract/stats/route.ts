@@ -97,8 +97,10 @@ export async function GET(req: Request) {
   let stats: any = null;
   const now = Date.now();
 
-  // 1. Check in-memory cache first
-  if (memoryStatsCache && now - memoryStatsCache.timestamp < CACHE_TTL_MS) {
+  // 1. Check in-memory cache first or return defaults if no contract configured
+  if (!nftAddr || !nftAddr.startsWith('0x')) {
+    stats = { ...DEFAULT_STATS, timestamp: now };
+  } else if (memoryStatsCache && now - memoryStatsCache.timestamp < CACHE_TTL_MS) {
     stats = memoryStatsCache.data;
   } else {
     try {

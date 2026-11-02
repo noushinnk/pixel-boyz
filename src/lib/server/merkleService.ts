@@ -185,43 +185,45 @@ export async function issueMerkleProof(walletAddress: string): Promise<MerklePro
 
   try {
     const nftAddr = CONTRACT_CONFIG.nftAddress as `0x${string}`;
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('RPC Timeout')), 3000));
-    const queryPromise = Promise.all([
-      (bscPublicClient.readContract as any)({
-        address: nftAddr,
-        abi: PIXEL_BOYZ_NFT_ABI,
-        functionName: 'freeMintedByWallet',
-        args: [normalized as `0x${string}`]
-      }),
-      (bscPublicClient.readContract as any)({
-        address: nftAddr,
-        abi: PIXEL_BOYZ_NFT_ABI,
-        functionName: 'totalFreeMinted'
-      }),
-      (bscPublicClient.readContract as any)({
-        address: nftAddr,
-        abi: PIXEL_BOYZ_NFT_ABI,
-        functionName: 'freeSaleActive'
-      }),
-      (bscPublicClient.readContract as any)({
-        address: nftAddr,
-        abi: PIXEL_BOYZ_NFT_ABI,
-        functionName: 'freePhaseClosed'
-      }),
-      (bscPublicClient.readContract as any)({
-        address: nftAddr,
-        abi: PIXEL_BOYZ_NFT_ABI,
-        functionName: 'merkleRoot'
-      })
-    ]);
+    if (nftAddr && nftAddr.startsWith('0x')) {
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('RPC Timeout')), 3000));
+      const queryPromise = Promise.all([
+        (bscPublicClient.readContract as any)({
+          address: nftAddr,
+          abi: PIXEL_BOYZ_NFT_ABI,
+          functionName: 'freeMintedByWallet',
+          args: [normalized as `0x${string}`]
+        }),
+        (bscPublicClient.readContract as any)({
+          address: nftAddr,
+          abi: PIXEL_BOYZ_NFT_ABI,
+          functionName: 'totalFreeMinted'
+        }),
+        (bscPublicClient.readContract as any)({
+          address: nftAddr,
+          abi: PIXEL_BOYZ_NFT_ABI,
+          functionName: 'freeSaleActive'
+        }),
+        (bscPublicClient.readContract as any)({
+          address: nftAddr,
+          abi: PIXEL_BOYZ_NFT_ABI,
+          functionName: 'freePhaseClosed'
+        }),
+        (bscPublicClient.readContract as any)({
+          address: nftAddr,
+          abi: PIXEL_BOYZ_NFT_ABI,
+          functionName: 'merkleRoot'
+        })
+      ]);
 
-    const [wMinted, tFree, fActive, fClosed, root] = (await Promise.race([queryPromise, timeoutPromise])) as any;
+      const [wMinted, tFree, fActive, fClosed, root] = (await Promise.race([queryPromise, timeoutPromise])) as any;
 
-    freeMintedByWallet = BigInt(wMinted);
-    totalFreeMinted = BigInt(tFree);
-    freeSaleActive = Boolean(fActive);
-    freePhaseClosed = Boolean(fClosed);
-    onChainMerkleRoot = root as `0x${string}`;
+      freeMintedByWallet = BigInt(wMinted);
+      totalFreeMinted = BigInt(tFree);
+      freeSaleActive = Boolean(fActive);
+      freePhaseClosed = Boolean(fClosed);
+      onChainMerkleRoot = root as `0x${string}`;
+    }
   } catch (err) {
     console.warn('Could not read contract live values for Merkle issuance, using fallback checks:', err);
   }

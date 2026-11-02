@@ -241,20 +241,32 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
           </div>
 
           {/* Contract Status & BSCScan Link */}
-          <div className="flex flex-col sm:items-end gap-2">
-            <a
-              href={`https://bscscan.com/address/${CONTRACT_CONFIG.nftAddress}`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-950/40 px-3.5 py-2 font-mono text-xs text-cyan-300 hover:border-cyan-300 transition-colors shadow-[0_0_15px_rgba(6,182,212,0.15)]"
-            >
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-              <span className="font-bold">BNB Chain:</span> {CONTRACT_CONFIG.nftAddress.slice(0, 6)}...{CONTRACT_CONFIG.nftAddress.slice(-4)} ↗
-            </a>
-            <span className="text-[11px] font-mono text-slate-400">
-              Chain ID: 56 · Mainnet Deployed
-            </span>
-          </div>
+          {isContractDeployed('nft') ? (
+            <div className="flex flex-col sm:items-end gap-2">
+              <a
+                href={`https://bscscan.com/address/${CONTRACT_CONFIG.nftAddress}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-950/40 px-3.5 py-2 font-mono text-xs text-cyan-300 hover:border-cyan-300 transition-colors shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+              >
+                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                <span className="font-bold">BNB Chain:</span> {CONTRACT_CONFIG.nftAddress.slice(0, 6)}...{CONTRACT_CONFIG.nftAddress.slice(-4)} ↗
+              </a>
+              <span className="text-[11px] font-mono text-slate-400">
+                Chain ID: 56 · Mainnet Deployed
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:items-end gap-1">
+              <span className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 font-mono text-xs text-slate-400">
+                <span className="h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_8px_#f59e0b]" />
+                <span>Smart Contract: TBA</span>
+              </span>
+              <span className="text-[11px] font-mono text-slate-500">
+                Chain ID: 56 · BNB Smart Chain
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ========================================================================= */}

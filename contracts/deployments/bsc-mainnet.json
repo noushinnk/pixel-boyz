@@ -2,30 +2,30 @@
   "contract": "PixelBoyzNFT",
   "network": "BNB Smart Chain",
   "chainId": 56,
-  "address": "0x5Fe0aaD20857322E93fFB97dF82c952e58234799",
-  "deploymentTransaction": "0xed3f72d36bf0f9575bc7475f723d52c63e6a51077a925ee59e15303f2f15d628",
-  "deploymentBlock": 131176730,
+  "address": "",
+  "deploymentTransaction": "",
+  "deploymentBlock": 0,
   "admin": "0x2d36622575A76913b4d5521DA47e259C0579deEb",
   "treasury": "0x71332AE6F510E5D9C5C8c3385ef083d3A312c6a4",
   "baseTokenURI": "https://asset.pixelboyz.shop/metadata/",
   "forgeContract": {
-    "address": "0x53142E20019453f5901A7b5481E223ABD27bC5B6",
-    "deploymentTransaction": "0xf44b3e7d4ae0729be50a8181a07b91da67186623d84c8927c81a31b4e2cfc6dd",
-    "deploymentBlock": 131178720,
+    "address": "",
+    "deploymentTransaction": "",
+    "deploymentBlock": 0,
     "admin": "0x2d36622575A76913b4d5521DA47e259C0579deEb",
     "treasury": "0x71332AE6F510E5D9C5C8c3385ef083d3A312c6a4"
   },
   "marketplaceContract": {
-    "address": "0xF849a3Eb62f76597eDec523Cb29dd436B1bd5ca1",
-    "deploymentTransaction": "0x80300e60c732a520ca09aff481d776bbee00dc3acbfe0ae630456f4abf4b1be6",
-    "deploymentBlock": 131179400,
+    "address": "",
+    "deploymentTransaction": "",
+    "deploymentBlock": 0,
     "admin": "0x2d36622575A76913b4d5521DA47e259C0579deEb",
     "feeRecipient": "0x2d36622575A76913b4d5521DA47e259C0579deEb"
   },
   "rewardsContract": {
-    "address": "0xb163117921464bcBb9D8ed209CE7B1234bD50B4b",
-    "deploymentTransaction": "0x496aa0af87ad38107f283c6a1fc22e1cf97d0f335bd662e92d0350a33649eb8c",
-    "deploymentBlock": 131180029,
+    "address": "",
+    "deploymentTransaction": "",
+    "deploymentBlock": 0,
     "admin": "0x2d36622575A76913b4d5521DA47e259C0579deEb"
   }
 }

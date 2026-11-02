@@ -21,10 +21,10 @@ export const CONTRACT_CONFIG = {
   assetBaseUrl: getEnv('ASSET_BASE_URL', 'https://assets.pixelboyz.io'),
   
   // Contract Addresses (environment values override the recorded deployment)
-  nftAddress: getEnv('NFT_CONTRACT_ADDRESS', '0x5Fe0aaD20857322E93fFB97dF82c952e58234799'),
-  marketplaceAddress: getEnv('MARKETPLACE_CONTRACT_ADDRESS', '0xF849a3Eb62f76597eDec523Cb29dd436B1bd5ca1'),
-  forgeAddress: getEnv('FORGE_CONTRACT_ADDRESS', '0x53142E20019453f5901A7b5481E223ABD27bC5B6'),
-  rewardsAddress: getEnv('REWARDS_CONTRACT_ADDRESS', '0xb163117921464bcBb9D8ed209CE7B1234bD50B4b'),
+  nftAddress: getEnv('NFT_CONTRACT_ADDRESS', ''),
+  marketplaceAddress: getEnv('MARKETPLACE_CONTRACT_ADDRESS', ''),
+  forgeAddress: getEnv('FORGE_CONTRACT_ADDRESS', ''),
+  rewardsAddress: getEnv('REWARDS_CONTRACT_ADDRESS', ''),
   elementMarketplaceUrl: 'https://element.market/collections/pixel-boyz',
   
   // Protocol Parameters
