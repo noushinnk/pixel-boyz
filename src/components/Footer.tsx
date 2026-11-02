@@ -1,13 +1,14 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 import { CONTRACT_CONFIG } from '../contracts/config';
 
 interface FooterProps {
-  navigate: (route: string) => void;
+  navigate?: (route: string) => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ navigate }) => {
+export const Footer: React.FC<FooterProps> = () => {
   return (
     <footer className="border-t border-white/10 bg-[#060814] px-5 py-14 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -47,34 +48,34 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
             </h4>
             <ul className="mt-4 space-y-2.5 text-xs font-mono text-slate-400">
               <li>
-                <button onClick={() => navigate('/mint')} className="hover:text-white transition-colors">
+                <Link href="/mint" className="hover:text-white transition-colors block">
                   Mint Portal
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => navigate('/explore')} className="hover:text-white transition-colors">
+                <Link href="/explore" className="hover:text-white transition-colors block">
                   Explore Gallery
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => navigate('/marketplace')} className="hover:text-white transition-colors">
+                <Link href="/marketplace" className="hover:text-white transition-colors block">
                   Native Marketplace
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => navigate('/forge')} className="hover:text-white transition-colors">
+                <Link href="/forge" className="hover:text-white transition-colors block">
                   Cyber Forge Upgrade
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => navigate('/rewards')} className="hover:text-white transition-colors">
+                <Link href="/rewards" className="hover:text-white transition-colors block">
                   BNB Rewards Pool
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => navigate('/quests')} className="hover:text-white transition-colors">
+                <Link href="/quests" className="hover:text-white transition-colors block">
                   Community Quests
-                </button>
+                </Link>
               </li>
             </ul>
           </div>
@@ -96,14 +97,14 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
                 </a>
               </li>
               <li>
-                <button onClick={() => navigate('/activity')} className="hover:text-white transition-colors">
+                <Link href="/activity" className="hover:text-white transition-colors block">
                   Live Activity Feed
-                </button>
+                </Link>
               </li>
               <li>
-                <button onClick={() => navigate('/admin')} className="hover:text-white transition-colors">
+                <Link href="/admin" className="hover:text-white transition-colors block">
                   Admin Verification
-                </button>
+                </Link>
               </li>
               <li>
                 <span className="text-slate-500">Cloudflare R2 Gateway</span>
@@ -126,12 +127,12 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
             >
               X (@pixelboyzai) ↗
             </a>
-            <button onClick={() => navigate('/quests')} className="hover:text-slate-300 transition-colors">
+            <Link href="/quests" className="hover:text-slate-300 transition-colors">
               Community Quests
-            </button>
-            <button onClick={() => navigate('/activity')} className="hover:text-slate-300 transition-colors">
+            </Link>
+            <Link href="/activity" className="hover:text-slate-300 transition-colors">
               Live Feed
-            </button>
+            </Link>
             <a
               href={CONTRACT_CONFIG.bscScanUrl}
               target="_blank"

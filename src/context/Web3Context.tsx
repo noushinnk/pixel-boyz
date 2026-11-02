@@ -292,7 +292,13 @@ Ask for my confirmation before submitting the transaction.`;
 
   const getProvider = () => {
     const w = typeof window !== 'undefined' ? (window as any) : {};
-    const eth = w.ethereum || w.binance || w.okxwallet || w.trustwallet;
+    let eth = w.ethereum;
+    if (eth?.providers?.length) {
+      eth = eth.providers.find((p: any) => p.isMetaMask || p.isBinance) || eth.providers[0];
+    }
+    if (!eth) {
+      eth = w.binance || w.okxwallet || w.trustwallet || w.phantom?.ethereum;
+    }
     if (!eth) throw new Error('No compatible Web3 wallet provider detected. Please install MetaMask, Binance Web3 Wallet, or Trust Wallet.');
     return eth;
   };
@@ -325,13 +331,17 @@ Ask for my confirmation before submitting the transaction.`;
 
   // Injected wallet event listener
   useEffect(() => {
-    const eth = (window as unknown as { ethereum?: {
-      on: (event: string, handler: (...args: unknown[]) => void) => void;
-      removeListener: (event: string, handler: (...args: unknown[]) => void) => void;
-      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-    } }).ethereum;
+    if (typeof window === 'undefined') return;
+    const w = window as any;
+    let eth = w.ethereum;
+    if (eth?.providers?.length) {
+      eth = eth.providers.find((p: any) => p.isMetaMask || p.isBinance) || eth.providers[0];
+    }
+    if (!eth) {
+      eth = w.binance || w.okxwallet || w.trustwallet;
+    }
 
-    if (!eth) return;
+    if (!eth || typeof eth.on !== 'function') return;
 
     const handleAccountsChanged = (accounts: unknown) => {
       const accList = accounts as string[];
@@ -347,12 +357,18 @@ Ask for my confirmation before submitting the transaction.`;
       setChainId(parseInt(chainIdHex as string, 16));
     };
 
-    eth.on('accountsChanged', handleAccountsChanged);
-    eth.on('chainChanged', handleChainChanged);
+    try {
+      eth.on('accountsChanged', handleAccountsChanged);
+      eth.on('chainChanged', handleChainChanged);
+    } catch {}
 
     return () => {
-      eth.removeListener('accountsChanged', handleAccountsChanged);
-      eth.removeListener('chainChanged', handleChainChanged);
+      try {
+        if (typeof eth?.removeListener === 'function') {
+          eth.removeListener('accountsChanged', handleAccountsChanged);
+          eth.removeListener('chainChanged', handleChainChanged);
+        }
+      } catch {}
     };
   }, []);
 
@@ -361,9 +377,15 @@ Ask for my confirmation before submitting the transaction.`;
     setIsConnecting(true);
     try {
       const w = typeof window !== 'undefined' ? (window as any) : {};
-      const eth = w.ethereum || w.binance || w.okxwallet || w.trustwallet;
-
+      let eth = w.ethereum;
+      if (eth?.providers?.length) {
+        eth = eth.providers.find((p: any) => p.isMetaMask || p.isBinance) || eth.providers[0];
+      }
       if (!eth) {
+        eth = w.binance || w.okxwallet || w.trustwallet || w.phantom?.ethereum;
+      }
+
+      if (!eth || typeof eth.request !== 'function') {
         alert('No Web3 wallet extension detected in this browser.\n\nPlease install MetaMask, Binance Web3 Wallet, or Trust Wallet to connect to BNB Smart Chain, or copy the Agentic Wallet Mint Prompt to execute via your Binance agent.');
         return;
       }
@@ -372,18 +394,27 @@ Ask for my confirmation before submitting the transaction.`;
       if (accounts && accounts.length > 0) {
         setAccount(accounts[0]);
         setUserProfile(prev => ({ ...prev, address: accounts[0] }));
-        const balanceHex = await eth.request({ method: 'eth_getBalance', params: [accounts[0], 'latest'] }) as string;
-        setBalanceBnb((Number.parseInt(balanceHex, 16) / 1e18).toFixed(4));
 
-        // Check chainId
-        const currentChainHex = (await eth.request({ method: 'eth_chainId' })) as string;
-        const currentChainId = parseInt(currentChainHex, 16);
-        setChainId(currentChainId);
-
-        if (currentChainId !== BSC_MAINNET_CHAIN_ID) {
-          await switchNetwork(BSC_MAINNET_CHAIN_ID);
+        try {
+          const balanceHex = await eth.request({ method: 'eth_getBalance', params: [accounts[0], 'latest'] }) as string;
+          if (balanceHex) {
+            setBalanceBnb((Number.parseInt(balanceHex, 16) / 1e18).toFixed(4));
+          }
+        } catch (e) {
+          console.warn('Balance query warning:', e);
         }
 
+        try {
+          const currentChainHex = (await eth.request({ method: 'eth_chainId' })) as string;
+          const currentChainId = parseInt(currentChainHex, 16);
+          setChainId(currentChainId);
+
+          if (currentChainId !== BSC_MAINNET_CHAIN_ID) {
+            await switchNetwork(BSC_MAINNET_CHAIN_ID);
+          }
+        } catch (e) {
+          console.warn('Chain ID query warning:', e);
+        }
       }
     } catch (err) {
       console.warn('Wallet connection request rejected or failed:', err);

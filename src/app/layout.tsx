@@ -37,25 +37,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var originalFetch = window.fetch;
-                  Object.defineProperty(window, 'fetch', {
-                    get: function() { return originalFetch; },
-                    set: function(val) { originalFetch = val; },
-                    configurable: true,
-                    enumerable: true
-                  });
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
-      </head>
+      <head />
       <body
         suppressHydrationWarning
         className="bg-[#080b18] text-white antialiased selection:bg-cyan-500/30 selection:text-cyan-200 min-h-screen flex flex-col"

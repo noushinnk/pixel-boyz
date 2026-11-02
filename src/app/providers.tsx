@@ -11,7 +11,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const navigate = (path: string) => {
-    router.push(path);
+    try {
+      router.push(path);
+    } catch {
+      if (typeof window !== 'undefined') {
+        window.location.href = path;
+      }
+    }
   };
 
   return (

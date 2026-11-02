@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useWeb3 } from '../context/Web3Context';
 import { PixelBoyRenderer } from '../components/PixelBoyRenderer';
 import { CONTRACT_CONFIG } from '../contracts/config';
@@ -71,18 +72,18 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
 
             {/* Action CTAs: Exactly 2 clean buttons (No duplicate connect button) */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
-              <button
-                onClick={() => navigate('/mint')}
-                className="neon-button text-xs sm:text-sm py-3 px-6 sm:px-7"
+              <Link
+                href="/mint"
+                className="neon-button text-xs sm:text-sm py-3 px-6 sm:px-7 inline-flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 MINT NOW <span>↗</span>
-              </button>
-              <button
-                onClick={() => navigate('/explore')}
-                className="ghost-button text-xs sm:text-sm py-3 px-6 sm:px-7"
+              </Link>
+              <Link
+                href="/explore"
+                className="ghost-button text-xs sm:text-sm py-3 px-6 sm:px-7 inline-flex items-center justify-center cursor-pointer"
               >
                 EXPLORE COLLECTION
-              </button>
+              </Link>
             </div>
 
             {/* Real Protocol Metrics: Responsive 2-to-3 columns so nothing overflows on mobile */}
@@ -188,20 +189,20 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
               On-chain ERC-721 digital collectibles deployed directly on BNB Smart Chain.
             </p>
           </div>
-          <button
-            onClick={() => navigate('/explore')}
-            className="ghost-button text-xs self-start sm:self-auto"
+          <Link
+            href="/explore"
+            className="ghost-button text-xs self-start sm:self-auto inline-flex items-center gap-1 cursor-pointer"
           >
             VIEW ALL CHARACTERS <span>→</span>
-          </button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {nfts.slice(0, 4).map((nft) => (
-            <div
+            <Link
               key={nft.id}
-              onClick={() => navigate(`/nft/${nft.id}`)}
-              className="cursor-pointer group rounded-3xl border border-white/10 bg-[#0c1022] p-4 transition-all duration-300 hover:border-cyan-400/50 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.6)]"
+              href={`/nft/${nft.id}`}
+              className="cursor-pointer group rounded-3xl border border-white/10 bg-[#0c1022] p-4 transition-all duration-300 hover:border-cyan-400/50 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.6)] block"
             >
               <PixelBoyRenderer nft={nft} size="md" />
               <div className="mt-4 flex items-center justify-between">
@@ -221,7 +222,7 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
                   </span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
@@ -260,18 +261,18 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 pt-2">
-                  <button
-                    onClick={() => navigate('/marketplace')}
-                    className="neon-button text-xs py-2.5"
+                  <Link
+                    href="/marketplace"
+                    className="neon-button text-xs py-2.5 text-center block cursor-pointer"
                   >
                     BUY / BROWSE
-                  </button>
-                  <button
-                    onClick={() => navigate('/profile')}
-                    className="ghost-button text-xs py-2.5"
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className="ghost-button text-xs py-2.5 text-center block cursor-pointer"
                   >
                     LIST NFT
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -300,12 +301,12 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
               </div>
 
               <div>
-                <button
-                  onClick={() => navigate('/marketplace')}
-                  className="neon-button text-xs py-3 px-6"
+                <Link
+                  href="/marketplace"
+                  className="neon-button text-xs py-3 px-6 inline-flex items-center gap-1 cursor-pointer"
                 >
                   ENTER MARKETPLACE ↗
-                </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -324,12 +325,12 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
               Real-Time On-Chain Transactions
             </h2>
           </div>
-          <button
-            onClick={() => navigate('/activity')}
-            className="ghost-button text-xs"
+          <Link
+            href="/activity"
+            className="ghost-button text-xs inline-flex items-center gap-1 cursor-pointer"
           >
             VIEW FULL FEED →
-          </button>
+          </Link>
         </div>
 
         {activity.length === 0 ? (
@@ -340,12 +341,12 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
               Transactions executed during minting, marketplace trading, and forge evolutions appear here in real time.
             </p>
             <div className="mt-4">
-              <button
-                onClick={() => navigate('/mint')}
-                className="neon-button text-xs py-2 px-4"
+              <Link
+                href="/mint"
+                className="neon-button text-xs py-2 px-4 inline-flex items-center gap-1 cursor-pointer"
               >
                 Mint To Trigger First Transaction ↗
-              </button>
+              </Link>
             </div>
           </div>
         ) : (
@@ -406,18 +407,18 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <button
-                onClick={() => navigate('/mint')}
-                className="neon-button text-xs py-3 px-6 sm:px-7"
+              <Link
+                href="/mint"
+                className="neon-button text-xs py-3 px-6 sm:px-7 inline-flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 ENTER MINT PORTAL <span>↗</span>
-              </button>
-              <button
-                onClick={() => navigate('/explore')}
-                className="ghost-button text-xs py-3 px-6 sm:px-7"
+              </Link>
+              <Link
+                href="/explore"
+                className="ghost-button text-xs py-3 px-6 sm:px-7 inline-flex items-center justify-center cursor-pointer"
               >
                 BROWSE GALLERY
-              </button>
+              </Link>
             </div>
           </div>
         </div>

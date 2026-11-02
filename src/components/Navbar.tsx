@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { useWeb3 } from '../context/Web3Context';
 import { CONTRACT_CONFIG, BSC_MAINNET_CHAIN_ID } from '../contracts/config';
 
@@ -75,7 +76,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
         <div className="w-full max-w-[1600px] mx-auto flex h-16 sm:h-20 items-center justify-between px-3 sm:px-5 lg:px-8 gap-2 sm:gap-4">
           
           {/* Left: Cybernetic Crest Logo */}
-          <button
+          <Link
+            href="/"
             onClick={() => handleNavClick('/')}
             className="flex items-center gap-2 sm:gap-3 text-left focus:outline-none group shrink-0"
           >
@@ -101,15 +103,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                 BNB SMART CHAIN
               </span>
             </div>
-          </button>
+          </Link>
 
           {/* Desktop Nav Links with Purple Active Pills - Responsive without Horizontal Overflow */}
           <nav className="hidden lg:flex items-center gap-1 xl:gap-1.5 shrink min-w-0">
             {primaryNavItems.map((item) => {
               const isActive = currentRoute === item.path || (item.path !== '/' && currentRoute.startsWith(item.path));
               return (
-                <button
+                <Link
                   key={item.path}
+                  href={item.path}
                   onClick={() => handleNavClick(item.path)}
                   className={`flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-xl font-mono text-[11px] xl:text-xs uppercase tracking-wider transition-all whitespace-nowrap shrink-0 ${
                     isActive
@@ -119,13 +122,14 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                 >
                   <span className="text-xs">{item.icon}</span>
                   <span>{item.label}</span>
-                </button>
+                </Link>
               );
             })}
 
             {/* "More" dropdown for secondary items to ensure right icons never get clipped */}
             <div className="relative">
               <button
+                type="button"
                 onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl font-mono text-[11px] xl:text-xs uppercase tracking-wider transition-all whitespace-nowrap ${
                   isSecondaryActive
@@ -142,8 +146,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                   {secondaryNavItems.map((item) => {
                     const isActive = currentRoute === item.path;
                     return (
-                      <button
+                      <Link
                         key={item.path}
+                        href={item.path}
                         onClick={() => handleNavClick(item.path)}
                         className={`flex items-center gap-2.5 w-full rounded-xl px-3 py-2 text-left font-mono text-xs transition-colors ${
                           isActive
@@ -153,7 +158,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                       >
                         <span>{item.icon}</span>
                         <span>{item.label}</span>
-                      </button>
+                      </Link>
                     );
                   })}
                 </div>
@@ -182,17 +187,19 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
             </button>
 
             {/* Gamepad HUD Button */}
-            <button
+            <Link
+              href="/rewards"
               onClick={() => handleNavClick('/rewards')}
               className="hidden sm:flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-[#0d1226] text-slate-300 hover:text-purple-300 hover:border-purple-500/50 transition-colors shrink-0"
               title="Operative Game Hub"
             >
               🎮
-            </button>
+            </Link>
 
             {/* Notification Bell with unread dot */}
             <div className="relative shrink-0">
               <button
+                type="button"
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
                 className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-[#0d1226] text-slate-300 hover:text-cyan-300 hover:border-cyan-400/50 transition-colors"
                 title="Telemetry Notifications"
@@ -216,12 +223,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                       <span className="text-purple-300 font-bold">Agentic Allocation:</span> 2 free mints verified on allowlist.
                     </div>
                   </div>
-                  <button
+                  <Link
+                    href="/activity"
                     onClick={() => handleNavClick('/activity')}
                     className="w-full text-center text-cyan-400 hover:underline pt-1 text-[11px] block"
                   >
                     View All Activity Feed →
-                  </button>
+                  </Link>
                 </div>
               )}
             </div>
@@ -229,9 +237,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
             {/* ONLY ONE Single Wallet Button or Profile Pill */}
             {!isConnected ? (
               <button
+                type="button"
                 onClick={() => setWalletModalOpen(true)}
                 disabled={isConnecting}
-                className="neon-button text-[11px] sm:text-xs py-1.5 sm:py-2 px-2.5 sm:px-4 shrink-0 whitespace-nowrap"
+                className="neon-button text-[11px] sm:text-xs py-1.5 sm:py-2 px-2.5 sm:px-4 shrink-0 whitespace-nowrap cursor-pointer"
               >
                 {isConnecting ? 'CONNECTING...' : 'CONNECT'}
               </button>
@@ -239,6 +248,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
               <div className="relative shrink-0">
                 {/* Circular Profile Avatar Chip */}
                 <button
+                  type="button"
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   className="flex items-center gap-1.5 sm:gap-2.5 rounded-2xl border border-purple-500/40 bg-gradient-to-r from-purple-950/40 to-[#0d1226] p-1 sm:p-1.5 pr-2 sm:pr-3 hover:border-purple-400 transition-all shadow-[0_0_15px_rgba(168,85,247,0.25)] shrink-0"
                 >
@@ -285,34 +295,39 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                     </div>
 
                     <div className="space-y-1">
-                      <button
+                      <Link
+                        href="/profile"
                         onClick={() => handleNavClick('/profile')}
-                        className="w-full text-left rounded-lg px-3 py-2 text-xs font-mono text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
+                        className="w-full text-left rounded-lg px-3 py-2 text-xs font-mono text-slate-300 hover:bg-white/10 hover:text-white transition-colors block"
                       >
                         👤 View Profile & Inventory
-                      </button>
-                      <button
+                      </Link>
+                      <Link
+                        href="/rewards"
                         onClick={() => handleNavClick('/rewards')}
-                        className="w-full text-left rounded-lg px-3 py-2 text-xs font-mono text-purple-300 hover:bg-purple-500/10 transition-colors"
+                        className="w-full text-left rounded-lg px-3 py-2 text-xs font-mono text-purple-300 hover:bg-purple-500/10 transition-colors block"
                       >
                         💎 Rewards & Mission HUD
-                      </button>
-                      <button
+                      </Link>
+                      <Link
+                        href="/quests"
                         onClick={() => handleNavClick('/quests')}
-                        className="w-full text-left rounded-lg px-3 py-2 text-xs font-mono text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
+                        className="w-full text-left rounded-lg px-3 py-2 text-xs font-mono text-slate-300 hover:bg-white/10 hover:text-white transition-colors block"
                       >
                         🎯 Active Quests
-                      </button>
-                      <button
+                      </Link>
+                      <Link
+                        href="/admin"
                         onClick={() => handleNavClick('/admin')}
-                        className="w-full text-left rounded-lg px-3 py-2 text-xs font-mono text-cyan-300 hover:bg-cyan-500/10 transition-colors"
+                        className="w-full text-left rounded-lg px-3 py-2 text-xs font-mono text-cyan-300 hover:bg-cyan-500/10 transition-colors block"
                       >
                         ⚙️ Admin Protocol Controls
-                      </button>
+                      </Link>
                     </div>
 
                     <div className="border-t border-white/10 pt-2 mt-2">
                       <button
+                        type="button"
                         onClick={() => {
                           disconnectWallet();
                           setProfileDropdownOpen(false);
@@ -329,6 +344,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
 
             {/* Mobile Menu Hamburger - Always perfectly positioned and never cut off */}
             <button
+              type="button"
               aria-label="Toggle navigation"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="flex lg:hidden h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-base sm:text-lg text-white hover:bg-white/10 shrink-0"
@@ -357,10 +373,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
               {allNavItems.map((item) => {
                 const isActive = currentRoute === item.path;
                 return (
-                  <button
+                  <Link
                     key={item.path}
+                    href={item.path}
                     onClick={() => handleNavClick(item.path)}
-                    className={`flex items-center gap-3 w-full rounded-xl px-4 py-2.5 text-left font-mono text-xs uppercase tracking-wider transition-all ${
+                    className={`flex items-center gap-3 w-full rounded-xl px-4 py-2.5 text-left font-mono text-xs uppercase tracking-wider transition-all block ${
                       isActive
                         ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold'
                         : 'text-slate-300 hover:bg-white/5'
@@ -368,7 +385,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                   >
                     <span>{item.icon}</span>
                     <span>{item.label}</span>
-                  </button>
+                  </Link>
                 );
               })}
             </div>
@@ -378,7 +395,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
 
       {/* Wallet Connection Modal */}
       {walletModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-in fade-in">
           <div className="w-full max-w-md rounded-3xl border border-cyan-400/40 bg-[#0b0f24] p-6 shadow-2xl font-mono">
             <div className="flex items-center justify-between pb-4 border-b border-white/10">
               <span className="font-display text-base font-bold text-white">
