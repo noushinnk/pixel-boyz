@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { ConfigNotice, SiteShell, StatCard } from "@/components/site";
 
-export const dynamic = "force-dynamic";
+export function generateStaticParams() {
+  return Array.from({ length: 6 }, (_, index) => ({ id: String(index + 1) }));
+}
 
 export default async function NftDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
