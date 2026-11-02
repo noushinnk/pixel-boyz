@@ -46,8 +46,10 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
   // ONLY agentic wallets get free mints. Others get 0 free mints.
   const freeQuantity = isAgenticEligible ? Math.min(quantity, freeRemaining) : 0;
   const paidQuantity = quantity - freeQuantity;
-  const totalCostBnb = currentMintPriceBnb
-    ? (paidQuantity * parseFloat(currentMintPriceBnb)).toFixed(4)
+  const mintPriceBnb = Number(currentMintPriceBnb);
+  const hasMintPrice = Number.isFinite(mintPriceBnb) && mintPriceBnb >= 0;
+  const totalCostBnb = hasMintPrice
+    ? (paidQuantity * mintPriceBnb).toFixed(4)
     : '—';
 
   // Maximum selectable
@@ -393,7 +395,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                     Standard Mint Quantity
                   </span>
                   <span className="text-purple-300 font-bold">
-                    {paidQuantity} NFT × {currentMintPriceBnb || '—'} BNB
+                    {paidQuantity} NFT × {hasMintPrice ? mintPriceBnb.toFixed(4) : '—'} BNB
                   </span>
                 </div>
 
