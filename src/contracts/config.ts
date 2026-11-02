@@ -25,6 +25,7 @@ export const CONTRACT_CONFIG = {
   marketplaceAddress: getEnv('MARKETPLACE_CONTRACT_ADDRESS', '0xF849a3Eb62f76597eDec523Cb29dd436B1bd5ca1'),
   forgeAddress: getEnv('FORGE_CONTRACT_ADDRESS', '0x53142E20019453f5901A7b5481E223ABD27bC5B6'),
   rewardsAddress: getEnv('REWARDS_CONTRACT_ADDRESS', '0xb163117921464bcBb9D8ed209CE7B1234bD50B4b'),
+  elementMarketplaceUrl: 'https://element.market/collections/pixel-boyz',
   
   // Protocol Parameters
   totalSupply: 10000,

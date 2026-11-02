@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useWeb3 } from '../context/Web3Context';
 import { PixelBoyRenderer } from '../components/PixelBoyRenderer';
 import { PixelBoyNFT, RarityTier } from '../types/nft';
 import { CONTRACT_CONFIG } from '../contracts/config';
+import { INITIAL_NFTS } from '../data/collectionData';
 
 interface ExplorePageProps {
   navigate: (route: string) => void;
@@ -13,9 +14,17 @@ interface ExplorePageProps {
 export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
   const { nfts, isConnected, connectWallet, buyNftFromMarketplace } = useWeb3();
 
+  const allNfts = useMemo(() => (nfts && nfts.length > 0 ? nfts : INITIAL_NFTS), [nfts]);
+
   // Active featured character (default to Genesis #0001)
-  const [featuredNft, setFeaturedNft] = useState<PixelBoyNFT>(() => nfts[0] || {} as PixelBoyNFT);
+  const [featuredNft, setFeaturedNft] = useState<PixelBoyNFT>(() => allNfts[0] || INITIAL_NFTS[0]);
   const [isFavorited, setIsFavorited] = useState(false);
+
+  useEffect(() => {
+    if ((!featuredNft || !featuredNft.id) && allNfts.length > 0) {
+      setFeaturedNft(allNfts[0]);
+    }
+  }, [allNfts, featuredNft]);
 
   // Filters & State
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -26,7 +35,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
 
   // Filtered and Sorted list
   const filteredNfts = useMemo(() => {
-    return nfts
+    return allNfts
       .filter((nft) => {
         if (searchQuery.trim()) {
           const query = searchQuery.toLowerCase().trim();
@@ -43,7 +52,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
         if (sortBy === 'rarity_desc') return b.rarityScore - a.rarityScore;
         return a.id - b.id;
       });
-  }, [nfts, searchQuery, selectedRarity, sortBy]);
+  }, [allNfts, searchQuery, selectedRarity, sortBy]);
 
   const activeFloor = '—';
 
@@ -80,6 +89,15 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
               >
                 ⚡ Mint Now
               </button>
+              <a
+                href="https://element.market/collections/pixel-boyz"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:brightness-110 hover:-translate-y-0.5 transition-all"
+              >
+                <span>⚡ Element Market</span>
+                <span>↗</span>
+              </a>
               <button
                 onClick={() => {
                   const el = document.getElementById('collection-grid');
@@ -92,23 +110,23 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
             </div>
           </div>
 
-          {/* Stat Cells (Matches 10K, Floor, Owners, Vol in Photo) */}
+          {/* Stat Cells (Authentic Protocol Parameters) */}
           <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-white/10 pt-6 font-mono">
             <div className="border-r border-white/10 pr-4">
-              <div className="font-display text-2xl sm:text-3xl font-black text-white">10K</div>
+              <div className="font-display text-2xl sm:text-3xl font-black text-white">10,000</div>
               <div className="text-[11px] uppercase tracking-wider text-slate-400 mt-0.5">Total Supply</div>
             </div>
             <div className="border-r border-white/10 pr-4">
-              <div className="font-display text-2xl sm:text-3xl font-black text-cyan-300">{activeFloor}</div>
-              <div className="text-[11px] uppercase tracking-wider text-slate-400 mt-0.5">Floor Price</div>
+              <div className="font-display text-2xl sm:text-3xl font-black text-cyan-300">6,000</div>
+              <div className="text-[11px] uppercase tracking-wider text-slate-400 mt-0.5">Free Allocation (.ai)</div>
             </div>
             <div className="border-r border-white/10 pr-4">
-              <div className="font-display text-2xl sm:text-3xl font-black text-purple-300">8.2K</div>
-              <div className="text-[11px] uppercase tracking-wider text-slate-400 mt-0.5">Owners</div>
+              <div className="font-display text-2xl sm:text-3xl font-black text-purple-300">4,000</div>
+              <div className="text-[11px] uppercase tracking-wider text-slate-400 mt-0.5">Paid Allocation</div>
             </div>
             <div>
-              <div className="font-display text-2xl sm:text-3xl font-black text-emerald-400">45 BNB</div>
-              <div className="text-[11px] uppercase tracking-wider text-slate-400 mt-0.5">Volume</div>
+              <div className="font-display text-2xl sm:text-3xl font-black text-emerald-400">BNB 56</div>
+              <div className="text-[11px] uppercase tracking-wider text-slate-400 mt-0.5">BSC Mainnet</div>
             </div>
           </div>
         </div>
@@ -219,12 +237,11 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
               {/* Price & Action Box (Matches photo price strip) */}
               <div className="rounded-2xl border border-white/10 bg-[#060814] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono">
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-slate-400 block">Current Price</span>
+                  <span className="text-[10px] uppercase tracking-wider text-slate-400 block">Current Status</span>
                   <div className="flex items-baseline gap-2">
                     <span className="font-display text-2xl font-bold text-white">
-                      {featuredNft.price ? `${featuredNft.price} BNB` : '—'}
+                      {featuredNft.price ? `${featuredNft.price} BNB` : 'Genesis Specimen'}
                     </span>
-                    <span className="text-xs text-slate-500">($0.65 USD)</span>
                   </div>
                 </div>
 
@@ -233,19 +250,15 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
                     onClick={() => navigate(`/nft/${featuredNft.id}`)}
                     className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 px-7 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-[0_0_25px_rgba(236,72,153,0.4)] hover:brightness-110 transition-all"
                   >
-                    🛒 View / Trade
+                    🛒 View / Inspect
                   </button>
                 </div>
               </div>
 
-              {/* Watching Proof */}
-              <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400">
-                <span className="flex -space-x-1.5">
-                  <span className="inline-block h-5 w-5 rounded-full bg-cyan-500 border border-black" />
-                  <span className="inline-block h-5 w-5 rounded-full bg-purple-500 border border-black" />
-                  <span className="inline-block h-5 w-5 rounded-full bg-pink-500 border border-black" />
-                </span>
-                <span>LIVE WATCHER DATA UNAVAILABLE</span>
+              {/* Protocol Verification Strip */}
+              <div className="flex items-center gap-2 text-[11px] font-mono text-cyan-300">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                <span>BNB Smart Chain Mainnet · Verified Genesis Specimen</span>
               </div>
             </div>
           </div>
@@ -400,36 +413,45 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
             {/* Card 1 */}
             <div className="rounded-2xl border border-white/10 bg-[#0c1022] p-4 flex items-center gap-4 hover:border-pink-500/40 transition-colors">
               <div className="h-14 w-14 rounded-xl overflow-hidden shrink-0 border border-white/15 bg-purple-950">
-                <img src="/assets/aistudio/17_01ef732d.png" alt="Genesis Warriors" className="h-full w-full object-contain" />
+                <img src="/assets/aistudio/17_01ef732d.png" alt="Free Agent ID Phase" className="h-full w-full object-contain" />
               </div>
               <div className="space-y-1">
-                <h4 className="font-display text-sm font-bold text-white">Genesis Warriors</h4>
-                <div className="text-slate-400 text-[11px]">Floor: <strong className="text-cyan-300">0.05 BNB</strong></div>
-                <div className="text-slate-500 text-[10px]">24h Vol: 12.4 BNB</div>
+                <h4 className="font-display text-sm font-bold text-white">Free Agent ID Phase</h4>
+                <div className="text-slate-400 text-[11px]">Allocation: <strong className="text-cyan-300">6,000 Free</strong></div>
+                <div className="text-slate-500 text-[10px]">Verified (.ai) Holders</div>
               </div>
             </div>
 
             {/* Card 2 */}
             <div className="rounded-2xl border border-white/10 bg-[#0c1022] p-4 flex items-center gap-4 hover:border-pink-500/40 transition-colors">
               <div className="h-14 w-14 rounded-xl overflow-hidden shrink-0 border border-white/15 bg-blue-950">
-                <img src="/assets/aistudio/18_6d72f8ce.png" alt="Shadow Clan" className="h-full w-full object-contain" />
+                <img src="/assets/aistudio/18_6d72f8ce.png" alt="Public Mint Phase" className="h-full w-full object-contain" />
               </div>
               <div className="space-y-1">
-                <h4 className="font-display text-sm font-bold text-white">Shadow Clan</h4>
-                <div className="text-slate-400 text-[11px]">Floor: <strong className="text-cyan-300">0.08 BNB</strong></div>
-                <div className="text-slate-500 text-[10px]">24h Vol: 18.2 BNB</div>
+                <h4 className="font-display text-sm font-bold text-white">Public Mint Phase</h4>
+                <div className="text-slate-400 text-[11px]">Allocation: <strong className="text-cyan-300">4,000 Paid</strong></div>
+                <div className="text-slate-500 text-[10px]">Price: 0.001 BNB</div>
               </div>
             </div>
 
             {/* Card 3 */}
-            <div className="rounded-2xl border border-white/10 bg-[#0c1022] p-4 flex items-center gap-4 hover:border-pink-500/40 transition-colors">
-              <div className="h-14 w-14 rounded-xl overflow-hidden shrink-0 border border-white/15 bg-emerald-950">
-                <img src="/assets/aistudio/26_95acd707.png" alt="Cyber Legion" className="h-full w-full object-contain" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="font-display text-sm font-bold text-white">Cyber Legion</h4>
-                <div className="text-slate-400 text-[11px]">Floor: <strong className="text-cyan-300">0.03 BNB</strong></div>
-                <div className="text-slate-500 text-[10px]">24h Vol: 8.5 BNB</div>
+            <div className="rounded-2xl border border-cyan-500/30 bg-[#0c1022] p-4 flex items-center justify-between gap-4 hover:border-cyan-400 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="h-14 w-14 rounded-xl overflow-hidden shrink-0 border border-white/15 bg-emerald-950">
+                  <img src="/assets/aistudio/26_95acd707.png" alt="Element Marketplace" className="h-full w-full object-contain" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-display text-sm font-bold text-white">Element Market</h4>
+                  <div className="text-slate-400 text-[11px]">Secondary Trading</div>
+                  <a
+                    href="https://element.market/collections/pixel-boyz"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-cyan-300 hover:text-cyan-200"
+                  >
+                    View Collection ↗
+                  </a>
+                </div>
               </div>
             </div>
           </div>

@@ -146,7 +146,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
 
     const res = await verifyXCampaignPost(xPostUrl.trim());
     if (res.success) {
-      setXVerificationMsg(res.message || 'X post submitted successfully! Free mint proof is unlocked.');
+      setXVerificationMsg(res.message || 'X post submitted successfully! Free mint proof and Agentic Wallet Mint Prompt are now unlocked.');
       try {
         confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
       } catch (e) { /* ignore */ }
@@ -155,8 +155,15 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
     }
   };
 
-  // Copy Agentic Wallet Prompt Handler
+  // Copy Agentic Wallet Prompt Handler - Unlocked only after successful X post submission
   const handleCopyAgenticPrompt = async () => {
+    if (!xCampaignCompleted) {
+      setXVerificationErr('PROMPT LOCKED: Please submit your published X post link below first to unlock copying the Agentic Wallet Mint Prompt.');
+      const el = document.getElementById('x-campaign-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
     const prompt = getAgenticPrompt(quantity);
     const ok = await copyTextSafely(prompt);
     if (ok) {
@@ -441,9 +448,22 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
             <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
               <button
                 onClick={handleCopyAgenticPrompt}
-                className="neon-button text-xs py-3 px-5 shadow-[0_0_20px_rgba(34,211,238,0.4)] whitespace-nowrap"
+                className={
+                  xCampaignCompleted
+                    ? "neon-button text-xs py-3 px-5 shadow-[0_0_20px_rgba(34,211,238,0.4)] whitespace-nowrap cursor-pointer transition-all"
+                    : "rounded-xl border border-amber-500/40 bg-amber-950/40 hover:bg-amber-950/60 px-5 py-3 text-xs font-mono font-bold text-amber-300 transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] flex items-center justify-center gap-2 cursor-pointer"
+                }
+                title={
+                  xCampaignCompleted
+                    ? "Copy Agentic Wallet Mint Prompt"
+                    : "Locked: Submit your X post link below to unlock prompt copying"
+                }
               >
-                {copiedPrompt ? '✓ PROMPT COPIED TO CLIPBOARD!' : 'COPY AGENTIC WALLET MINT PROMPT 📋'}
+                {copiedPrompt
+                  ? '✓ PROMPT COPIED TO CLIPBOARD!'
+                  : xCampaignCompleted
+                  ? 'COPY AGENTIC WALLET MINT PROMPT 📋'
+                  : '🔒 SUBMIT X POST TO UNLOCK PROMPT'}
               </button>
 
               <button
@@ -535,8 +555,14 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                 )}
 
                 {xVerificationMsg && (
-                  <div className="rounded-lg border border-emerald-500/30 bg-emerald-950/40 p-2.5 text-[11px] font-mono text-emerald-300">
-                    ✓ {xVerificationMsg}
+                  <div className="rounded-lg border border-emerald-500/30 bg-emerald-950/40 p-2.5 text-[11px] font-mono text-emerald-300 space-y-2">
+                    <div>✓ {xVerificationMsg}</div>
+                    <button
+                      onClick={handleCopyAgenticPrompt}
+                      className="w-full rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 py-1.5 px-3 text-cyan-200 font-mono text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      {copiedPrompt ? '✓ PROMPT COPIED TO CLIPBOARD!' : 'COPY UNLOCKED AGENT PROMPT 📋'}
+                    </button>
                   </div>
                 )}
               </div>

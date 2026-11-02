@@ -102,8 +102,19 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ navigate }) =>
             </p>
           </div>
 
-          {/* Quick List Action */}
-          <div className="flex items-center gap-3">
+          {/* Quick List Action & External Marketplace */}
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href="https://element.market/collections/pixel-boyz"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 px-5 py-3 font-mono text-xs font-bold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(59,130,246,0.5)] hover:brightness-110 hover:-translate-y-0.5 transition-all"
+            >
+              <span className="text-sm">⚡</span>
+              <span>ELEMENT MARKETPLACE</span>
+              <span className="text-cyan-200">↗</span>
+            </a>
+
             {unlistedOwnedNfts.length > 0 && (
               <button
                 onClick={() => {
@@ -206,6 +217,15 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ navigate }) =>
               Real-time trading is live! Be the first to list a Pixel Boy from your inventory or mint a new operative.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-4">
+              <a
+                href="https://element.market/collections/pixel-boyz"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(59,130,246,0.5)] hover:brightness-110 hover:-translate-y-0.5 transition-all"
+              >
+                <span>⚡ Trade on Element Marketplace</span>
+                <span>↗</span>
+              </a>
               {unlistedOwnedNfts.length > 0 ? (
                 <button
                   onClick={() => {
@@ -219,7 +239,7 @@ export const MarketplacePage: React.FC<MarketplacePageProps> = ({ navigate }) =>
               ) : (
                 <button
                   onClick={() => navigate('/mint')}
-                  className="neon-button text-xs py-3 px-6"
+                  className="ghost-button text-xs py-3 px-6"
                 >
                   Mint A Character To Trade ↗
                 </button>

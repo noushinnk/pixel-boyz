@@ -14,6 +14,17 @@ interface PixelBoyRendererProps {
   customImage?: string;
 }
 
+const ORIGINAL_PIXEL_BOY_IMAGES = [
+  '/assets/aistudio/pixil-frame-0__5__45747249.png',
+  '/assets/aistudio/17_01ef732d.png',
+  '/assets/aistudio/18_6d72f8ce.png',
+  '/assets/aistudio/26_95acd707.png',
+  '/assets/aistudio/35_3bc87fd1.png',
+  '/assets/aistudio/56_1643a0f0.png',
+  '/assets/aistudio/57_66af4ba5.png',
+  '/assets/aistudio/1005_8f11a7d5.png',
+];
+
 export const PixelBoyRenderer: React.FC<PixelBoyRendererProps> = ({
   nft,
   size = 'md',
@@ -24,7 +35,10 @@ export const PixelBoyRenderer: React.FC<PixelBoyRendererProps> = ({
   customImage,
 }) => {
   const [imageError, setImageError] = useState(false);
-  const activeImage = customImage || nft.image || `${CONTRACT_CONFIG.assetBaseUrl}/images/${nft.id}.png`;
+  const tokenIdx = Math.abs(Number(nft?.id || 1) - 1);
+  const defaultLocalImage = ORIGINAL_PIXEL_BOY_IMAGES[tokenIdx % ORIGINAL_PIXEL_BOY_IMAGES.length];
+
+  const activeImage = customImage || (nft?.image && !nft.image.startsWith('http') ? nft.image : defaultLocalImage);
 
   // Color mappings based on archetype & traits
   const archetypeColors: Record<string, { bg: string; accent: string; jacket: string; eye: string }> = {
@@ -59,38 +73,15 @@ export const PixelBoyRenderer: React.FC<PixelBoyRendererProps> = ({
       {/* Scanline grid overlay */}
       <div className="scanlines absolute inset-0 z-10 opacity-40 pointer-events-none" />
 
-      {/* Primary NFT Image Asset */}
-      {!imageError ? (
-        <img
-          src={activeImage}
-          alt={nft?.name || 'Pixel Boy'}
-          onError={() => setImageError(true)}
-          className="pixel-art absolute inset-0 h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
-        />
-      ) : (
-        /* Vector Pixel Art Fallback */
-        <svg
-          viewBox="0 0 100 100"
-          className="pixel-art absolute inset-0 h-full w-full select-none"
-          shapeRendering="crispEdges"
-        >
-          <rect width="100" height="100" fill={colors.bg} />
-          <circle cx="50" cy="38" r="24" fill={`${colors.accent}20`} />
-          <path
-            d="M32 72 L36 58 L44 54 L56 54 L64 58 L68 72 L72 92 L28 92 Z"
-            fill={colors.jacket}
-          />
-          <polygon points="44,54 56,54 50,68" fill="#0f172a" />
-          <rect x="48" y="62" width="4" height="4" fill={colors.accent} />
-          <rect x="36" y="24" width="28" height="30" fill="#e2e8f0" />
-          <rect x="40" y="34" width="6" height="5" fill={colors.eye} />
-          <rect x="54" y="34" width="6" height="5" fill={colors.eye} />
-          <rect x="34" y="16" width="32" height="10" fill={colors.accent} />
-          <rect x="46" y="12" width="24" height="6" fill={colors.accent} />
-          <rect x="42" y="72" width="6" height="24" fill="#1e293b" />
-          <rect x="52" y="72" width="6" height="24" fill="#1e293b" />
-        </svg>
-      )}
+      {/* Primary NFT Image Asset (Always original artwork) */}
+      <img
+        src={imageError ? defaultLocalImage : activeImage}
+        alt={nft?.name || 'Pixel Boy'}
+        onError={() => {
+          if (!imageError) setImageError(true);
+        }}
+        className="pixel-art absolute inset-0 h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+      />
 
       {/* Floating Badges */}
       {showBadge && !hideTokenId && (
