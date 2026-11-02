@@ -46,8 +46,8 @@ export function AdminPage({ navigate }: AdminPageProps) {
   };
 
   const isAdminWallet = account && (
-    account.toLowerCase() === '0x2d36622575A76913b4d5521DA47e259C0579deEb'.toLowerCase() ||
-    account.toLowerCase() === '0x71332AE6F510E5D9C5C8c3385ef083d3A312c6a4'.toLowerCase()
+    account.toLowerCase() === CONTRACT_CONFIG.initialOwner.toLowerCase() ||
+    account.toLowerCase() === CONTRACT_CONFIG.initialTreasury.toLowerCase()
   );
 
   return (

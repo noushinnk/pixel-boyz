@@ -1,6 +1,7 @@
 import { createPublicClient, http, fallback, isAddress } from 'viem';
 import { bsc } from 'viem/chains';
 import { db } from './db';
+import { CONTRACT_CONFIG } from '../../contracts/config';
 
 const primaryRpc = process.env.BSC_RPC_URL || process.env.NEXT_PUBLIC_BSC_RPC_URL || process.env.VITE_BSC_RPC_URL;
 
@@ -22,7 +23,7 @@ export const bscPublicClient = createPublicClient({
 // SPACE ID Agent ID (.ai) ERC-721 Registry Contract on BNB Smart Chain
 export const BINANCE_AGENT_ID_REGISTRY_ADDRESS = (
   process.env.BINANCE_AGENT_ID_REGISTRY_ADDRESS ||
-  '0x60B9262456dE011F7d15a54CdD8c48bAaa8B022F'
+  CONTRACT_CONFIG.registryAddress
 ) as `0x${string}`;
 
 const AGENT_ID_ABI = [

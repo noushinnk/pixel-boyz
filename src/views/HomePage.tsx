@@ -21,10 +21,11 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
     userProfile,
     rewardsPoolBnb,
     activity,
-    userClaimableBnb
+    userClaimableBnb,
+    isLiveContractActive
   } = useWeb3();
 
-  const displayNfts = nfts && nfts.length > 0 ? nfts : INITIAL_NFTS;
+  const displayNfts = nfts.length > 0 ? nfts : isLiveContractActive ? [] : INITIAL_NFTS;
 
   // Active character image selector (1st image default)
   const heroImages = [
@@ -45,9 +46,9 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
   const activeListings = displayNfts.filter((n) => n.isListed && n.price);
   const floorPrice = activeListings.length > 0
     ? Math.min(...activeListings.map((n) => parseFloat(n.price || '0'))).toFixed(3)
-    : '0.025';
+    : '—';
 
-  const marketFeaturedNft = activeListings[0] || displayNfts[1] || displayNfts[0];
+  const marketFeaturedNft = activeListings[0];
 
   return (
     <div className="min-h-screen bg-[#060813] text-white">

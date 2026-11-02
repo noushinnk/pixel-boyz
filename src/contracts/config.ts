@@ -18,13 +18,17 @@ export const CONTRACT_CONFIG = {
   currencySymbol: 'BNB',
   rpcUrl: getEnv('BSC_RPC_URL', 'https://bsc-dataseed.binance.org/'),
   bscScanUrl: getEnv('BSCSCAN_URL', 'https://bscscan.com'),
-  assetBaseUrl: getEnv('ASSET_BASE_URL', 'https://assets.pixelboyz.io'),
+  assetBaseUrl: getEnv('ASSET_BASE_URL', 'https://asset.pixelboyz.shop'),
+  initialOwner: getEnv('INITIAL_OWNER_ADDRESS', '0x2e588978f498a3311A3A05621f77025f19B68f8b'),
+  initialTreasury: getEnv('INITIAL_TREASURY_ADDRESS', '0x2d36622575A76913b4d5521DA47e259C0579deEb'),
+  registryAddress: getEnv('BINANCE_AGENT_ID_REGISTRY_ADDRESS', '0x60B9262456dE011F7d15a54CdD8c48bAaa8B022F'),
+  initialBaseURI: getEnv('INITIAL_BASE_URI', 'https://asset.pixelboyz.shop/metadata/'),
   
   // Contract Addresses (environment values override the recorded deployment)
-  nftAddress: getEnv('NFT_CONTRACT_ADDRESS', ''),
-  marketplaceAddress: getEnv('MARKETPLACE_CONTRACT_ADDRESS', ''),
-  forgeAddress: getEnv('FORGE_CONTRACT_ADDRESS', ''),
-  rewardsAddress: getEnv('REWARDS_CONTRACT_ADDRESS', ''),
+  nftAddress: getEnv('NFT_CONTRACT_ADDRESS', '0xaFB50403C0838D5b45F8748138BA33A70E23b8cf'),
+  marketplaceAddress: getEnv('MARKETPLACE_CONTRACT_ADDRESS', '0x4924cB9A4E995C3b0F82f43D281531f729027c58'),
+  forgeAddress: getEnv('FORGE_CONTRACT_ADDRESS', '0xc7813FF48cDE3B339f16152cc8058beB43046a2b'),
+  rewardsAddress: getEnv('REWARDS_CONTRACT_ADDRESS', '0xEdBc1fe3f3BA708f69a85d749C4F34c627ee8353'),
   elementMarketplaceUrl: 'https://element.market/collections/pixel-boyz',
   
   // Protocol Parameters

@@ -9,6 +9,16 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = () => {
+  const contractLinks = [
+    ['NFT Contract', CONTRACT_CONFIG.nftAddress],
+    ['Marketplace', CONTRACT_CONFIG.marketplaceAddress],
+    ['Forge', CONTRACT_CONFIG.forgeAddress],
+    ['Rewards', CONTRACT_CONFIG.rewardsAddress],
+    ['Agent ID Registry', CONTRACT_CONFIG.registryAddress],
+    ['Initial Owner', CONTRACT_CONFIG.initialOwner],
+    ['Treasury', CONTRACT_CONFIG.initialTreasury]
+  ];
+
   return (
     <footer className="border-t border-white/10 bg-[#060814] px-5 py-14 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -94,6 +104,30 @@ export const Footer: React.FC<FooterProps> = () => {
                   className="hover:text-cyan-300 transition-colors flex items-center gap-1"
                 >
                   BscScan Explorer ↗
+                </a>
+              </li>
+              {contractLinks.map(([label, address]) => (
+                <li key={label}>
+                  <a
+                    href={`${CONTRACT_CONFIG.bscScanUrl}/address/${address}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={address}
+                    className="hover:text-cyan-300 transition-colors flex items-center justify-between gap-2"
+                  >
+                    <span>{label}</span>
+                    <span>{address.slice(0, 6)}...{address.slice(-4)}</span>
+                  </a>
+                </li>
+              ))}
+              <li>
+                <a
+                  href={CONTRACT_CONFIG.initialBaseURI}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-cyan-300 transition-colors"
+                >
+                  NFT Metadata URI ↗
                 </a>
               </li>
               <li>

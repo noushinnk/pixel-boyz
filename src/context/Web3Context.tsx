@@ -132,7 +132,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   const [merkleProof, setMerkleProof] = useState<`0x${string}`[]>([]);
 
   // Collection State (Deterministic initial render matching SSR)
-  const [nfts, setNfts] = useState<PixelBoyNFT[]>(INITIAL_NFTS);
+  const [nfts, setNfts] = useState<PixelBoyNFT[]>(isContractDeployed('nft') ? [] : INITIAL_NFTS);
   const [quests, setQuests] = useState<Quest[]>(INITIAL_QUESTS);
   const [activity, setActivity] = useState<ActivityEvent[]>([]);
   const [rewardsPoolBnb, setRewardsPoolBnb] = useState<string>('');
@@ -203,6 +203,18 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [account]);
 
+  const refreshCollectionData = useCallback(async () => {
+    try {
+      const res = await fetch('/api/nfts');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.nfts)) setNfts(data.nfts);
+      }
+    } catch (err) {
+      console.warn('Error fetching live collection:', err);
+    }
+  }, []);
+
   // Initial load and periodic background refresh every 20 seconds
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -216,6 +228,12 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     const interval = setInterval(refreshContractData, 20000);
     return () => clearInterval(interval);
   }, [refreshContractData]);
+
+  useEffect(() => {
+    refreshCollectionData();
+    const interval = setInterval(refreshCollectionData, 30000);
+    return () => clearInterval(interval);
+  }, [refreshCollectionData]);
 
   const verifyAgentIdOnChain = async (): Promise<boolean> => {
     if (!account) return false;

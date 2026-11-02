@@ -1,4 +1,4 @@
-export type RarityTier = 'Common' | 'Rare' | 'Epic' | 'Legendary' | 'Mythic';
+export type RarityTier = 'Unknown' | 'Common' | 'Rare' | 'Epic' | 'Legendary' | 'Mythic';
 
 export type Archetype = 
   | 'Cyborg'
@@ -8,7 +8,8 @@ export type Archetype =
   | 'Astro Pilot'
   | 'Glitch Nomad'
   | 'Synth Priest'
-  | 'Holo Brawler';
+  | 'Holo Brawler'
+  | 'Unknown';
 
 export interface NFTTraits {
   archetype: Archetype;
@@ -43,6 +44,7 @@ export interface PixelBoyNFT {
   creator: string;
   mintedAt: number;
   mintTxHash: string;
+  metadataUri?: string;
   traits: NFTTraits;
   isListed: boolean;
   price: string | null; // in BNB, e.g. "0.045"

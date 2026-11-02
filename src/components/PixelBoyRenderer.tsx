@@ -38,7 +38,7 @@ export const PixelBoyRenderer: React.FC<PixelBoyRendererProps> = ({
   const tokenIdx = Math.abs(Number(nft?.id || 1) - 1);
   const defaultLocalImage = ORIGINAL_PIXEL_BOY_IMAGES[tokenIdx % ORIGINAL_PIXEL_BOY_IMAGES.length];
 
-  const activeImage = customImage || (nft?.image && !nft.image.startsWith('http') ? nft.image : defaultLocalImage);
+  const activeImage = customImage || nft?.image || (nft?.metadataUri ? undefined : defaultLocalImage);
 
   // Color mappings based on archetype & traits
   const archetypeColors: Record<string, { bg: string; accent: string; jacket: string; eye: string }> = {
@@ -74,14 +74,19 @@ export const PixelBoyRenderer: React.FC<PixelBoyRendererProps> = ({
       <div className="scanlines absolute inset-0 z-10 opacity-40 pointer-events-none" />
 
       {/* Primary NFT Image Asset (Always original artwork) */}
-      <img
-        src={imageError ? defaultLocalImage : activeImage}
-        alt={nft?.name || 'Pixel Boy'}
-        onError={() => {
-          if (!imageError) setImageError(true);
-        }}
-        className="pixel-art absolute inset-0 h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
-      />
+      {activeImage && !imageError ? (
+        <img
+          src={activeImage}
+          alt={nft?.name || 'Pixel Boy'}
+          onError={() => setImageError(true)}
+          className="pixel-art absolute inset-0 h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+        />
+      ) : (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 font-mono text-center">
+          <span className="text-3xl text-cyan-300/50">#{nft.id}</span>
+          <span className="text-[10px] uppercase tracking-wider text-slate-400">Artwork unavailable</span>
+        </div>
+      )}
 
       {/* Floating Badges */}
       {showBadge && !hideTokenId && (
@@ -90,7 +95,7 @@ export const PixelBoyRenderer: React.FC<PixelBoyRendererProps> = ({
             {nft.tokenId}
           </span>
           <span className="rounded border border-cyan-400/30 bg-[#080b18]/80 px-2 py-0.5 font-display text-[9px] font-semibold text-cyan-200 backdrop-blur-md">
-            LV. 0{nft.level}
+            {nft.level > 0 ? `LV. 0${nft.level}` : 'LEVEL UNKNOWN'}
           </span>
         </div>
       )}

@@ -12,16 +12,22 @@ interface ExplorePageProps {
 }
 
 export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
-  const { nfts, isConnected, connectWallet, buyNftFromMarketplace } = useWeb3();
+  const { nfts, isConnected, connectWallet, buyNftFromMarketplace, isLiveContractActive, totalMinted } = useWeb3();
 
-  const allNfts = useMemo(() => (nfts && nfts.length > 0 ? nfts : INITIAL_NFTS), [nfts]);
+  const allNfts = useMemo(
+    () => (nfts.length > 0 ? nfts : isLiveContractActive ? [] : INITIAL_NFTS),
+    [nfts, isLiveContractActive]
+  );
 
   // Active featured character (default to Genesis #0001)
   const [featuredNft, setFeaturedNft] = useState<PixelBoyNFT>(() => allNfts[0] || INITIAL_NFTS[0]);
   const [isFavorited, setIsFavorited] = useState(false);
 
   useEffect(() => {
-    if ((!featuredNft || !featuredNft.id) && allNfts.length > 0) {
+    const refreshedFeatured = allNfts.find(nft => nft.id === featuredNft.id);
+    if (refreshedFeatured && refreshedFeatured !== featuredNft) {
+      setFeaturedNft(refreshedFeatured);
+    } else if (!refreshedFeatured && allNfts.length > 0) {
       setFeaturedNft(allNfts[0]);
     }
   }, [allNfts, featuredNft]);
@@ -180,7 +186,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
                 <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/5 text-[11px] font-mono">
                   <div>
                     <span className="text-slate-500 text-[10px] block">Rarity Score</span>
-                    <span className="font-bold text-cyan-300">{featuredNft.rarityScore || 987.3}</span>
+                      <span className="font-bold text-cyan-300">{featuredNft.rarityScore || '—'}</span>
                   </div>
                   <div>
                     <span className="text-slate-500 text-[10px] block">Rank</span>
@@ -315,7 +321,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
 
             {/* Showing Count & View Toggle */}
             <div className="flex items-center justify-between md:justify-end gap-4 text-slate-400">
-              <span>Showing {filteredNfts.length} of 10,000 NFTs</span>
+              <span>Showing {filteredNfts.length} of {totalMinted.toLocaleString()} minted NFTs</span>
               <div className="flex items-center rounded-xl border border-white/15 bg-white/5 p-1">
                 <button
                   onClick={() => setViewMode('grid')}
@@ -365,12 +371,15 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({ navigate }) => {
                       {nft.name}
                     </span>
                     <span className="text-[10px] text-slate-400">
-                      LV.{nft.level}
+                      {nft.level > 0 ? `LV.${nft.level}` : 'LEVEL UNKNOWN'}
                     </span>
                   </div>
 
                   <div className="text-[11px] font-mono text-slate-400 truncate">
                     {nft.traits.weapon} · {nft.traits.armor}
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-500 truncate" title={nft.owner}>
+                    Owner {nft.owner.slice(0, 6)}...{nft.owner.slice(-4)}
                   </div>
 
                   {/* Price & Action */}
