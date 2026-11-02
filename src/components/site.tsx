@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { ecosystemFeatures } from "./content";
 
-const navItems = ["Mint", "Explore", "Marketplace", "Forge", "Rewards", "Quests", "Activity"];
 const stats = [
   ["TOTAL SUPPLY", "10,000"],
   ["MINTED", "—"],
@@ -12,37 +10,7 @@ const stats = [
   ["HOLDERS", "—"],
 ];
 export function SiteShell({ active = "Home", children }: { active?: string; children?: React.ReactNode }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  return (
-    <div className="min-h-screen overflow-hidden bg-[#080b18] text-white">
-      <header className="fixed top-0 z-30 w-full border-b border-white/10 bg-[#080b18]/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 lg:px-8">
-          <Link href="/" className="flex items-center gap-3" onClick={() => setMenuOpen(false)}>
-            <span className="brand-mark">PB</span>
-            <span className="font-display text-sm font-bold tracking-[0.22em]">PIXEL BOYZ</span>
-          </Link>
-          <nav className="hidden items-center gap-5 lg:gap-7 md:flex">
-            {["Home", ...navItems].map((item) => (
-              <Link key={item} href={item === "Home" ? "/" : `/${item.toLowerCase()}`} className={`nav-link ${active === item ? "text-white" : ""}`}>{item}</Link>
-            ))}
-          </nav>
-          <button className="neon-button hidden md:block">CONNECT WALLET</button>
-          <button aria-label="Toggle navigation" className="text-2xl md:hidden" onClick={() => setMenuOpen(!menuOpen)}>☰</button>
-        </div>
-        {menuOpen && <nav className="border-t border-white/10 bg-[#0b1022] px-5 py-5 md:hidden">
-          {["Home", ...navItems].map((item) => <Link onClick={() => setMenuOpen(false)} key={item} href={item === "Home" ? "/" : `/${item.toLowerCase()}`} className="block border-b border-white/5 py-3 font-display text-sm tracking-widest">{item}</Link>)}
-          <button className="neon-button mt-5 w-full">CONNECT WALLET</button>
-        </nav>}
-      </header>
-      {children || <HomeContent />}
-      <footer className="border-t border-white/10 px-5 py-10 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-5 md:flex-row">
-          <div><div className="font-display font-bold tracking-[0.2em]">PIXEL BOYZ</div><p className="mt-2 text-sm text-slate-500">A decentralized universe on BNB Smart Chain.</p></div>
-          <div className="flex gap-5 text-sm text-slate-500"><span>Discord</span><span>Twitter</span><span>Docs</span><span>© 2026</span></div>
-        </div>
-      </footer>
-    </div>
-  );
+  return <DashboardShell active={active === "Home" ? "Overview" : active}>{children || <HomeContent />}</DashboardShell>;
 }
 
 function HomeContent() {
