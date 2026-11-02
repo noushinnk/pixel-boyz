@@ -149,6 +149,78 @@ export const PIXEL_BOYZ_NFT_ABI = [
   },
   {
     type: 'function',
+    name: 'paidAllocation',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'freeAllocationRemaining',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'paidAllocationRemaining',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'remainingSupply',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'freePhaseClosed',
+    inputs: [],
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'walletMintStatus',
+    inputs: [{ name: 'wallet', type: 'address' }],
+    outputs: [
+      { name: 'freeMinted', type: 'uint256' },
+      { name: 'freeRemaining', type: 'uint256' },
+      { name: 'paidMinted', type: 'uint256' },
+      { name: 'paidRemaining', type: 'uint256' },
+      { name: 'totalWalletRemaining', type: 'uint256' }
+    ],
+    stateMutability: 'view'
+  },
+  {
+    type: 'function',
+    name: 'setMerkleRoot',
+    inputs: [{ name: 'newRoot', type: 'bytes32' }],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
+    name: 'setSaleStatus',
+    inputs: [
+      { name: 'freeActive', type: 'bool' },
+      { name: 'paidActive', type: 'bool' }
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
+    name: 'closeFreePhase',
+    inputs: [],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    type: 'function',
     name: 'approve',
     inputs: [
       { name: 'to', type: 'address' },

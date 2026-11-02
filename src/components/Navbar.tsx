@@ -416,6 +416,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
 
               <button
                 onClick={() => {
+                  connectWallet();
                   setWalletModalOpen(false);
                 }}
                 className="flex items-center justify-between w-full rounded-xl border border-cyan-400/40 bg-cyan-950/30 p-3.5 hover:bg-cyan-900/40 transition-all text-xs"
@@ -428,12 +429,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                   </div>
                 </div>
                 <span className="rounded bg-cyan-400/20 px-2 py-0.5 text-[9px] font-bold text-cyan-300">
-                  Allowlisted
+                  Allowlisted →
                 </span>
               </button>
 
               <button
                 onClick={() => {
+                  connectWallet();
                   setWalletModalOpen(false);
                 }}
                 className="flex items-center justify-between w-full rounded-xl border border-white/10 bg-white/5 p-3.5 hover:bg-white/10 transition-all text-xs"

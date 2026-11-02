@@ -99,8 +99,7 @@ export const RewardsPage: React.FC<RewardsPageProps> = ({ navigate }) => {
                         key={item.label}
                         onClick={() => {
                           setActiveTab(item.label as any);
-                          if (item.label === 'Dashboard') navigate(item.route);
-                          else setClaimFeedback('Coming soon');
+                          navigate(item.route);
                         }}
                         className={`flex items-center gap-3 w-full rounded-2xl px-4 py-3 text-left font-mono text-xs transition-all ${
                           isActive
@@ -173,17 +172,29 @@ export const RewardsPage: React.FC<RewardsPageProps> = ({ navigate }) => {
 
                 {/* Right Quick Controls */}
                 <div className="flex items-center gap-3">
-                  <button className="h-9 w-9 rounded-xl border border-white/10 bg-[#060814] flex items-center justify-center text-slate-300 hover:text-white">
+                  <button
+                    onClick={() => navigate('/mint')}
+                    title="Mint Portal"
+                    className="h-9 w-9 rounded-xl border border-white/10 bg-[#060814] flex items-center justify-center text-slate-300 hover:text-white hover:border-purple-500/50 transition-colors"
+                  >
                     🎮
                   </button>
-                  <button className="h-9 w-9 rounded-xl border border-white/10 bg-[#060814] flex items-center justify-center text-slate-300 hover:text-white relative">
+                  <button
+                    onClick={() => navigate('/activity')}
+                    title="Live Activity Telemetry"
+                    className="h-9 w-9 rounded-xl border border-white/10 bg-[#060814] flex items-center justify-center text-slate-300 hover:text-white hover:border-purple-500/50 transition-colors relative"
+                  >
                     🔔
                     <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-cyan-400" />
                   </button>
-                  <div className="relative h-10 w-10 rounded-full overflow-hidden border-2 border-purple-400 bg-purple-900 shrink-0">
+                  <button
+                    onClick={() => navigate('/profile')}
+                    title="View Profile & Inventory"
+                    className="relative h-10 w-10 rounded-full overflow-hidden border-2 border-purple-400 bg-purple-900 shrink-0 hover:scale-105 transition-transform"
+                  >
                     <img src="/assets/aistudio/pixil-frame-0__5__45747249.png" alt="Profile" className="pixel-art h-full w-full object-contain" />
                     <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-black" />
-                  </div>
+                  </button>
                 </div>
               </div>
 
@@ -221,11 +232,10 @@ export const RewardsPage: React.FC<RewardsPageProps> = ({ navigate }) => {
 
                       <div className="flex items-center gap-3 pt-3">
                         <button
-                          onClick={handleClaim}
-                          disabled
-                          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider text-white shadow-[0_0_25px_rgba(168,85,247,0.5)] hover:brightness-110 transition-all disabled:opacity-50"
+                          onClick={() => navigate('/mint')}
+                          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider text-white shadow-[0_0_25px_rgba(168,85,247,0.5)] hover:brightness-110 transition-all"
                         >
-                          COMING SOON
+                          MINT OPERATIVE ↗
                         </button>
                         <button
                           onClick={() => navigate('/quests')}
@@ -415,7 +425,11 @@ export const RewardsPage: React.FC<RewardsPageProps> = ({ navigate }) => {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-slate-400 text-xs">36h 15m</span>
-                      <button className="h-7 w-7 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs shadow-md">
+                      <button
+                        onClick={() => navigate('/mint')}
+                        title="Enter Mint Portal"
+                        className="h-7 w-7 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs shadow-md hover:bg-purple-500 transition-colors"
+                      >
                         ▶
                       </button>
                     </div>

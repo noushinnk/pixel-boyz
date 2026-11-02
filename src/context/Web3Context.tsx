@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   PixelBoyNFT,
   Quest,
@@ -48,6 +48,12 @@ interface Web3ContextType {
   activity: ActivityEvent[];
   userProfile: UserProfile;
   totalMinted: number;
+  totalFreeMinted: number;
+  totalPaidMinted: number;
+  paidAllocation: number;
+  freeAllocationRemaining: number;
+  paidAllocationRemaining: number;
+  remainingSupply: number;
   freeMintedCount: number;
   paidMintedCount: number;
   rewardsPoolBnb: string;
@@ -56,10 +62,24 @@ interface Web3ContextType {
   // Phase & Contract Settings
   freePhaseOpen: boolean;
   publicPhaseOpen: boolean;
+  freePhaseClosed: boolean;
   currentMintPriceBnb: string;
+  merkleRoot: string;
   isLiveContractActive: boolean;
 
+  // Wallet Specific Quotas
+  walletFreeMinted: number;
+  walletPaidMinted: number;
+  isAgentIdVerified: boolean;
+  isAgentIdLoading: boolean;
+  xCampaignCompleted: boolean;
+  xCampaignLoading: boolean;
+
   // Actions
+  refreshContractData: () => Promise<void>;
+  verifyAgentIdOnChain: () => Promise<boolean>;
+  verifyXCampaignPost: (postUrl: string) => Promise<{ success: boolean; error?: string; message?: string }>;
+  getAgenticPrompt: (quantity?: number) => string;
   mintPixelBoyz: (quantity: number) => Promise<{ success: boolean; txHash?: string; error?: string; mintedNfts?: PixelBoyNFT[] }>;
   listNftForSale: (tokenId: number, priceBnb: string) => Promise<{ success: boolean; txHash?: string; error?: string }>;
   cancelNftListing: (tokenId: number) => Promise<{ success: boolean; txHash?: string; error?: string }>;
@@ -86,18 +106,34 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   const [balanceBnb, setBalanceBnb] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
 
-  // Mint phase & state
-  const [freePhaseOpen, setFreePhaseOpen] = useState<boolean>(false);
-  const [publicPhaseOpen, setPublicPhaseOpen] = useState<boolean>(false);
-  const [currentMintPriceBnb, setCurrentMintPriceBnb] = useState<string>('');
+  // Live contract metrics
+  const [totalMinted, setTotalMinted] = useState<number>(0);
+  const [totalFreeMinted, setTotalFreeMinted] = useState<number>(0);
+  const [totalPaidMinted, setTotalPaidMinted] = useState<number>(0);
+  const [paidAllocation, setPaidAllocation] = useState<number>(4000);
+  const [freeAllocationRemaining, setFreeAllocationRemaining] = useState<number>(6000);
+  const [paidAllocationRemaining, setPaidAllocationRemaining] = useState<number>(4000);
+  const [remainingSupply, setRemainingSupply] = useState<number>(10000);
+  const [merkleRoot, setMerkleRoot] = useState<string>('0x0000000000000000000000000000000000000000000000000000000000000000');
+  const [freePhaseOpen, setFreePhaseOpen] = useState<boolean>(true);
+  const [publicPhaseOpen, setPublicPhaseOpen] = useState<boolean>(true);
+  const [freePhaseClosed, setFreePhaseClosed] = useState<boolean>(false);
+  const [currentMintPriceBnb, setCurrentMintPriceBnb] = useState<string>('0.001');
+
+  // Wallet-specific quotas & verifications
+  const [walletFreeMinted, setWalletFreeMinted] = useState<number>(0);
+  const [walletPaidMinted, setWalletPaidMinted] = useState<number>(0);
+  const [isAgentIdVerified, setIsAgentIdVerified] = useState<boolean>(false);
+  const [isAgentIdLoading, setIsAgentIdLoading] = useState<boolean>(false);
+  const [xCampaignCompleted, setXCampaignCompleted] = useState<boolean>(false);
+  const [xCampaignLoading, setXCampaignLoading] = useState<boolean>(false);
+  const [merkleProof, setMerkleProof] = useState<`0x${string}`[]>([]);
 
   // Collection State (Deterministic initial render matching SSR)
   const [nfts, setNfts] = useState<PixelBoyNFT[]>([]);
   const [quests, setQuests] = useState<Quest[]>([]);
   const [activity, setActivity] = useState<ActivityEvent[]>([]);
   const [rewardsPoolBnb, setRewardsPoolBnb] = useState<string>('');
-  const [claimedFreeMintsByWallet, setClaimedFreeMintsByWallet] = useState<Record<string, number>>({});
-  const [paidMintsByWallet, setPaidMintsByWallet] = useState<Record<string, number>>({});
 
   // Profile
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -111,18 +147,19 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     completedQuests: []
   });
 
-
   // Check allowlist status of current account
-  const allowlistEligibility = checkAllowlistEligibility(account);
-  const isBinanceAgenticWallet = allowlistEligibility.isEligible;
+  const allowlistEligibility = {
+    isEligible: isAgentIdVerified && xCampaignCompleted,
+    proof: merkleProof,
+    freeRemaining: Math.max(0, 2 - walletFreeMinted)
+  };
+  const isBinanceAgenticWallet = isAgentIdVerified;
 
   // Real or simulated contract status
   const isLiveContractActive = isContractDeployed('nft');
 
-  // Total calculations (100% Real, zero demo additions)
-  const [totalMinted, setTotalMinted] = useState(0);
-  const freeMintedCount = nfts.filter(n => n.history.some(h => h.type === 'mint' && (!h.price || h.price === '0' || h.price === '0.000'))).length;
-  const paidMintedCount = nfts.filter(n => n.history.some(h => h.type === 'mint' && Number(h.price) > 0)).length;
+  const freeMintedCount = totalFreeMinted;
+  const paidMintedCount = totalPaidMinted;
 
   // Filter user's NFTs
   const userNfts = account ? nfts.filter(n => n.owner.toLowerCase() === account.toLowerCase()) : [];
@@ -131,42 +168,132 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   const userClaimableBnb = '';
   const liveConfigurationError = 'This action is unavailable until deployed contracts and the indexer are configured.';
 
+  // Live contract data refresher (Fast unified endpoint with in-memory caching)
+  const refreshContractData = useCallback(async () => {
+    try {
+      const url = account ? `/api/contract/stats?address=${encodeURIComponent(account)}` : '/api/contract/stats';
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setTotalMinted(data.totalMinted ?? 0);
+        setTotalFreeMinted(data.totalFreeMinted ?? 0);
+        setTotalPaidMinted(data.totalPaidMinted ?? 0);
+        setPaidAllocation(data.paidAllocation ?? 4000);
+        setFreeAllocationRemaining(data.freeAllocationRemaining ?? 6000);
+        setPaidAllocationRemaining(data.paidAllocationRemaining ?? 4000);
+        setRemainingSupply(data.remainingSupply ?? 10000);
+        setCurrentMintPriceBnb(data.mintPriceBnb || '0.001');
+        setFreePhaseOpen(Boolean(data.freeSaleActive));
+        setPublicPhaseOpen(Boolean(data.paidSaleActive));
+        setFreePhaseClosed(Boolean(data.freePhaseClosed));
+        setMerkleRoot(data.merkleRoot || '0x0000000000000000000000000000000000000000000000000000000000000000');
+
+        if (data.wallet) {
+          setIsAgentIdVerified(Boolean(data.wallet.isAgentIdVerified));
+          setXCampaignCompleted(Boolean(data.wallet.xCampaignCompleted));
+          if (data.wallet.merkleProof && Array.isArray(data.wallet.merkleProof)) {
+            setMerkleProof(data.wallet.merkleProof);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching contract stats:', err);
+    }
+  }, [account]);
+
+  // Initial load and periodic background refresh every 20 seconds
   useEffect(() => {
-    const publicClient = createPublicClient({ chain: bsc, transport: http(CONTRACT_CONFIG.rpcUrl) }) as any;
-    void Promise.all([
-      publicClient.readContract({
-        address: CONTRACT_CONFIG.nftAddress as `0x${string}`,
-        abi: PIXEL_BOYZ_NFT_ABI as any,
-        functionName: 'mintPrice'
-      }),
-      publicClient.readContract({
-        address: CONTRACT_CONFIG.nftAddress as `0x${string}`,
-        abi: PIXEL_BOYZ_NFT_ABI as any,
-        functionName: 'totalMinted'
-      }),
-      publicClient.readContract({
-        address: CONTRACT_CONFIG.nftAddress as `0x${string}`,
-        abi: PIXEL_BOYZ_NFT_ABI as any,
-        functionName: 'freeSaleActive'
-      }),
-      publicClient.readContract({
-        address: CONTRACT_CONFIG.nftAddress as `0x${string}`,
-        abi: PIXEL_BOYZ_NFT_ABI as any,
-        functionName: 'paidSaleActive'
-      })
-    ]).then(([price, minted, freeActive, paidActive]) => {
-      setCurrentMintPriceBnb(formatEther(price as bigint));
-      setTotalMinted(Number(minted));
-      setFreePhaseOpen(Boolean(freeActive));
-      setPublicPhaseOpen(Boolean(paidActive));
-    }).catch(() => {
-      setCurrentMintPriceBnb('');
-    });
-  }, []);
+    refreshContractData();
+    const interval = setInterval(refreshContractData, 20000);
+    return () => clearInterval(interval);
+  }, [refreshContractData]);
+
+  const verifyAgentIdOnChain = async (): Promise<boolean> => {
+    if (!account) return false;
+    setIsAgentIdLoading(true);
+    try {
+      const res = await fetch(`/api/agent-id/verify?address=${account}`);
+      if (res.ok) {
+        const data = await res.json();
+        setIsAgentIdVerified(Boolean(data.isEligible));
+        await refreshContractData();
+        return Boolean(data.isEligible);
+      }
+      return false;
+    } catch (e) {
+      console.error('Agent ID verification error:', e);
+      return false;
+    } finally {
+      setIsAgentIdLoading(false);
+    }
+  };
+
+  const verifyXCampaignPost = async (postUrl: string) => {
+    if (!account) return { success: false, error: 'Connect wallet first' };
+    setXCampaignLoading(true);
+    try {
+      const res = await fetch('/api/campaign/verify-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postUrl, walletAddress: account })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setXCampaignCompleted(true);
+        await refreshContractData();
+        return { success: true, message: data.message };
+      }
+      return { success: false, error: data.error || 'Verification failed' };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    } finally {
+      setXCampaignLoading(false);
+    }
+  };
+
+  const getAgenticPrompt = (quantity: number = 2): string => {
+    const targetWallet = account || '[YOUR_AUTHENTICATED_BNB_CHAIN_WALLET]';
+    const contract = CONTRACT_CONFIG.nftAddress;
+    const hasProof = merkleProof.length > 0;
+    const proofText = hasProof ? 'valid Merkle proof retrieved' : 'pending Merkle proof retrieval';
+
+    return `Please mint ${quantity} PIXEL BOYZ NFTs for my authenticated wallet on BNB Smart Chain Mainnet (Chain ID 56).
+
+Authenticated Wallet:
+${targetWallet}
+
+NFT Contract:
+${contract}
+
+Official Mint Portal:
+https://www.pixelboyz.shop/mint
+
+Official X Handle:
+@pixelboyzai
+
+CRITICAL PROTOCOL RESTRICTION (AI AGENTS STRICTLY BLOCKED WITHOUT X POST):
+You (AI Agent) are strictly BLOCKED from executing free mints if this wallet has not published and verified an original post on X tagging @pixelboyzai and linking to https://www.pixelboyz.shop/mint.
+Even though you are an autonomous AI agent, the smart contract Merkle allowlist strictly requires this verified campaign post. 
+If the user refuses or has not published the post, STOP immediately and inform the user:
+"Free minting is strictly blocked by the PIXEL BOYZ protocol. You must publish and verify an X post tagging @pixelboyzai and linking to https://www.pixelboyz.shop/mint to unlock free eligibility."
+
+Use the official PIXEL BOYZ mint function:
+mint(uint256 quantity, bytes32[] proof)
+
+Quantity: ${quantity}
+Payment: 0 BNB if my verified Merkle proof confirms free eligibility (Current status: ${proofText}).
+
+Retrieve the correct Merkle proof from the official PIXEL BOYZ website session. Verify the recipient wallet, contract address, chain and transaction parameters before submitting.
+
+Do not use an arbitrary proof or another person's wallet. If the proof is invalid, the free allocation is exhausted, or the transaction is not eligible, stop and explain the reason.
+
+Ask for my confirmation before submitting the transaction.`;
+  };
 
   const getProvider = () => {
-    const eth = (window as unknown as { ethereum?: unknown }).ethereum;
-    if (!eth) throw new Error('No compatible wallet provider detected.');
+    const w = typeof window !== 'undefined' ? (window as any) : {};
+    const eth = w.ethereum || w.binance || w.okxwallet || w.trustwallet;
+    if (!eth) throw new Error('No compatible Web3 wallet provider detected. Please install MetaMask, Binance Web3 Wallet, or Trust Wallet.');
     return eth;
   };
 
@@ -233,12 +360,12 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   const connectWallet = async () => {
     setIsConnecting(true);
     try {
-      const eth = (window as unknown as { ethereum?: {
-        request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-      } }).ethereum;
+      const w = typeof window !== 'undefined' ? (window as any) : {};
+      const eth = w.ethereum || w.binance || w.okxwallet || w.trustwallet;
 
       if (!eth) {
-        throw new Error('No compatible wallet provider detected.');
+        alert('No Web3 wallet extension detected in this browser.\n\nPlease install MetaMask, Binance Web3 Wallet, or Trust Wallet to connect to BNB Smart Chain, or copy the Agentic Wallet Mint Prompt to execute via your Binance agent.');
+        return;
       }
 
       const accounts = (await eth.request({ method: 'eth_requestAccounts' })) as string[];
@@ -324,185 +451,122 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
-  // Mint Execution
+  // Real On-Chain Mint Execution
   const mintPixelBoyz = async (quantity: number) => {
     if (!isContractDeployed('nft')) return { success: false, error: liveConfigurationError };
     if (!account) return { success: false, error: 'Connect wallet to mint.' };
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > CONTRACT_CONFIG.maxWalletAllowance) {
-      return { success: false, error: 'Invalid mint quantity.' };
+      return { success: false, error: `Invalid mint quantity (1 - ${CONTRACT_CONFIG.maxWalletAllowance}).` };
     }
 
     try {
+      // 1. Retrieve latest verified Merkle proof for this wallet from backend
+      let currentProof: `0x${string}`[] = merkleProof;
+      let isAllowlistedFree = false;
+      try {
+        const proofRes = await fetch(`/api/merkle/proof?address=${account}`);
+        if (proofRes.ok) {
+          const pData = await proofRes.json();
+          if (pData.eligible && Array.isArray(pData.proof)) {
+            currentProof = pData.proof;
+            isAllowlistedFree = true;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not refresh proof before mint:', e);
+      }
+
+      // 2. Fetch live contract price, wallet free count, and allocation remaining
+      const nftAddress = CONTRACT_CONFIG.nftAddress as `0x${string}`;
       const publicClient = createPublicClient({ chain: bsc, transport: http(CONTRACT_CONFIG.rpcUrl) }) as any;
-      const [price, freeMinted] = await Promise.all([
+      const [priceWei, fMinted, tFree, fActive, fClosed] = await Promise.all([
         publicClient.readContract({
-          address: CONTRACT_CONFIG.nftAddress as `0x${string}`,
+          address: nftAddress,
           abi: PIXEL_BOYZ_NFT_ABI as any,
           functionName: 'mintPrice'
         }),
         publicClient.readContract({
-          address: CONTRACT_CONFIG.nftAddress as `0x${string}`,
+          address: nftAddress,
           abi: PIXEL_BOYZ_NFT_ABI as any,
           functionName: 'freeMintedByWallet',
           args: [account as `0x${string}`]
+        }),
+        publicClient.readContract({
+          address: nftAddress,
+          abi: PIXEL_BOYZ_NFT_ABI as any,
+          functionName: 'totalFreeMinted'
+        }),
+        publicClient.readContract({
+          address: nftAddress,
+          abi: PIXEL_BOYZ_NFT_ABI as any,
+          functionName: 'freeSaleActive'
+        }),
+        publicClient.readContract({
+          address: nftAddress,
+          abi: PIXEL_BOYZ_NFT_ABI as any,
+          functionName: 'freePhaseClosed'
         })
       ]);
-      const { proof } = checkAllowlistEligibility(account);
-      const freeRemaining = allowlistEligibility.isEligible
-        ? Math.max(0, CONTRACT_CONFIG.freeMintLimitPerWallet - Number(freeMinted))
+
+      const walletFreeRemaining = isAllowlistedFree && Boolean(fActive) && !Boolean(fClosed)
+        ? Math.max(0, 2 - Number(fMinted))
         : 0;
-      const paidQuantity = Math.max(0, quantity - (freePhaseOpen ? Math.min(quantity, freeRemaining) : 0));
-      const value = (price as bigint) * BigInt(paidQuantity);
+      const allocationRemaining = Math.max(0, 6000 - Number(tFree));
+      const freeEligibleQty = Math.min(walletFreeRemaining, allocationRemaining);
+
+      const freeQty = Math.min(quantity, freeEligibleQty);
+      const paidQty = quantity - freeQty;
+      const requiredPayment = (priceWei as bigint) * BigInt(paidQty);
+
+      // 3. Dispatch transaction to deployed contract on BNB Smart Chain Mainnet
       const txHash = await sendContractTransaction(
-        CONTRACT_CONFIG.nftAddress as `0x${string}`,
+        nftAddress,
         PIXEL_BOYZ_NFT_ABI,
         'mint',
-        [BigInt(quantity), proof],
-        value
+        [BigInt(quantity), currentProof],
+        requiredPayment
       );
-      return { success: true, txHash };
-    } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : 'Mint transaction failed.' };
-    }
-    /*
-      NFT metadata and activity must be read from the indexer after confirmation.
-    */
-    /* Live mint contract integration is required before this action is enabled. */
-    if (!isContractDeployed('nft')) return { success: false, error: liveConfigurationError };
-    if (!account) {
-      return { success: false, error: 'Wallet not connected. Please connect your BNB Chain wallet first.' };
-    }
 
-    if (quantity < 1 || quantity > CONTRACT_CONFIG.maxWalletAllowance) {
-      return { success: false, error: `Quantity must be between 1 and ${CONTRACT_CONFIG.maxWalletAllowance}.` };
-    }
+      // 4. Record mint event on backend
+      try {
+        await fetch('/api/mint/record', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            walletAddress: account,
+            quantity,
+            freeQty,
+            paidQty,
+            priceBnb: formatEther(requiredPayment),
+            txHash
+          })
+        });
+      } catch (err) {
+        console.warn('Backend mint recording non-blocking warning:', err);
+      }
 
-    const normAccount = account.toLowerCase();
-    const alreadyFree = claimedFreeMintsByWallet[normAccount] || 0;
-    const alreadyPaid = paidMintsByWallet[normAccount] || 0;
+      // 5. Refresh contract and wallet data
+      await refreshContractData();
 
-    // Check allowlist eligibility
-    const { isEligible, proof } = checkAllowlistEligibility(account);
-    const availableFree = isEligible ? Math.max(0, CONTRACT_CONFIG.freeMintLimitPerWallet - alreadyFree) : 0;
-    const freeToClaim = Math.min(quantity, availableFree);
-    const paidToClaim = quantity - freeToClaim;
+      // Update quests and XP
+      triggerQuestProgress('q2', 1);
+      triggerQuestProgress('q3', quantity);
+      setUserProfile(prev => ({
+        ...prev,
+        xp: prev.xp + 100 * quantity
+      }));
 
-    if (alreadyPaid + paidToClaim > CONTRACT_CONFIG.paidMintLimitPerWallet) {
+      return {
+        success: true,
+        txHash
+      };
+    } catch (error: any) {
+      console.error('Mint transaction error:', error);
       return {
         success: false,
-        error: `Exceeds paid mint limit of ${CONTRACT_CONFIG.paidMintLimitPerWallet} per wallet. Already minted: ${alreadyPaid}.`
+        error: error?.shortMessage || error?.message || 'Transaction failed or rejected by wallet.'
       };
     }
-
-    // Exact BNB calculation: paidToClaim * mintPriceBnb
-    const totalCostBnb = (paidToClaim * parseFloat(currentMintPriceBnb)).toFixed(4);
-
-    // If real contract is deployed, call contract mint via window.ethereum
-    const txHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
-
-    const REAL_IMAGE_ASSETS = [
-      '/assets/aistudio/pixil-frame-0__5__45747249.png',
-      '/assets/aistudio/17_01ef732d.png',
-      '/assets/aistudio/18_6d72f8ce.png',
-      '/assets/aistudio/26_95acd707.png',
-      '/assets/aistudio/35_3bc87fd1.png',
-      '/assets/aistudio/56_1643a0f0.png',
-      '/assets/aistudio/57_66af4ba5.png',
-      '/assets/aistudio/1005_8f11a7d5.png'
-    ];
-
-    // Create generated Pixel Boyz NFTs
-    const newNfts: PixelBoyNFT[] = [];
-    const archetypesList: Archetype[] = ['Cyborg', 'Neon Ronin', 'Quantum Hacker', 'Shadow Operative', 'Astro Pilot', 'Glitch Nomad'];
-    
-    for (let i = 0; i < quantity; i++) {
-      const nextId = 200 + nfts.length + i + 1;
-      const arc = archetypesList[Math.floor(Math.random() * archetypesList.length)];
-      const isFreeThisOne = i < freeToClaim;
-      const rarities: RarityTier[] = ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic'];
-      const rIndex = Math.random() < 0.05 ? 4 : Math.random() < 0.15 ? 3 : Math.random() < 0.35 ? 2 : Math.random() < 0.65 ? 1 : 0;
-      const assignedImage = REAL_IMAGE_ASSETS[(nfts.length + i) % REAL_IMAGE_ASSETS.length];
-
-      const newBoy: PixelBoyNFT = {
-        id: nextId,
-        tokenId: `PB-${String(nextId).padStart(4, '0')}`,
-        name: `Pixel Boy #${String(nextId).padStart(4, '0')}`,
-        image: assignedImage,
-        level: 1,
-        rarity: rarities[rIndex],
-        rarityScore: Math.floor(40 + Math.random() * 55),
-        owner: account,
-        creator: account,
-        mintedAt: Date.now(),
-        mintTxHash: txHash,
-        traits: {
-          archetype: arc,
-          headgear: TRAIT_OPTIONS.headgears[Math.floor(Math.random() * TRAIT_OPTIONS.headgears.length)],
-          visor: TRAIT_OPTIONS.visors[Math.floor(Math.random() * TRAIT_OPTIONS.visors.length)],
-          armor: TRAIT_OPTIONS.armors[Math.floor(Math.random() * TRAIT_OPTIONS.armors.length)],
-          weapon: TRAIT_OPTIONS.weapons[Math.floor(Math.random() * TRAIT_OPTIONS.weapons.length)],
-          core: TRAIT_OPTIONS.cores[Math.floor(Math.random() * TRAIT_OPTIONS.cores.length)],
-          background: TRAIT_OPTIONS.backgrounds[Math.floor(Math.random() * TRAIT_OPTIONS.backgrounds.length)],
-          skinTone: '#cbd5e1'
-        },
-        isListed: false,
-        price: null,
-        seller: null,
-        highestOffer: null,
-        history: [
-          {
-            id: `h-mint-${nextId}`,
-            type: 'mint',
-            from: '0x0000000000000000000000000000000000000000',
-            to: account,
-            price: isFreeThisOne ? '0.000' : currentMintPriceBnb,
-            timestamp: Date.now(),
-            txHash
-          }
-        ],
-        xp: 100
-      };
-
-      newNfts.push(newBoy);
-    }
-
-    // Update state
-    setNfts(prev => [...prev, ...newNfts]);
-    setClaimedFreeMintsByWallet(prev => ({
-      ...prev,
-      [normAccount]: alreadyFree + freeToClaim
-    }));
-    setPaidMintsByWallet(prev => ({
-      ...prev,
-      [normAccount]: alreadyPaid + paidToClaim
-    }));
-
-    // Record activity
-    const activityEvent: ActivityEvent = {
-      id: `act-${Date.now()}`,
-      type: freeToClaim > 0 ? 'mint_free' : 'mint_paid',
-      wallet: account,
-      tokenId: newNfts[0]?.id,
-      amount: totalCostBnb,
-      timestamp: Date.now(),
-      txHash,
-      status: 'confirmed'
-    };
-    setActivity(prev => [activityEvent, ...prev]);
-
-    // Update user profile XP and Quests
-    setUserProfile(prev => ({
-      ...prev,
-      xp: prev.xp + 100 * quantity
-    }));
-    triggerQuestProgress('q2', 1);
-    triggerQuestProgress('q3', quantity);
-
-    return {
-      success: true,
-      txHash,
-      mintedNfts: newNfts
-    };
   };
 
   // List NFT
@@ -941,14 +1005,32 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         activity,
         userProfile,
         totalMinted,
+        totalFreeMinted,
+        totalPaidMinted,
+        paidAllocation,
+        freeAllocationRemaining,
+        paidAllocationRemaining,
+        remainingSupply,
         freeMintedCount,
         paidMintedCount,
         rewardsPoolBnb,
         userClaimableBnb,
         freePhaseOpen,
         publicPhaseOpen,
+        freePhaseClosed,
         currentMintPriceBnb,
+        merkleRoot,
         isLiveContractActive,
+        walletFreeMinted,
+        walletPaidMinted,
+        isAgentIdVerified,
+        isAgentIdLoading,
+        xCampaignCompleted,
+        xCampaignLoading,
+        refreshContractData,
+        verifyAgentIdOnChain,
+        verifyXCampaignPost,
+        getAgenticPrompt,
         mintPixelBoyz,
         listNftForSale,
         cancelNftListing,

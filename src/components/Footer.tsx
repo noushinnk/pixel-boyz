@@ -118,10 +118,28 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/5 pt-8 text-xs font-mono text-slate-500 sm:flex-row">
           <div>© 2026 PIXEL BOYZ UNIVERSE. ALL RIGHTS RESERVED.</div>
           <div className="flex gap-6">
-            <span className="hover:text-slate-400 cursor-pointer">Discord</span>
-            <span className="hover:text-slate-400 cursor-pointer">X (Twitter)</span>
-            <span className="hover:text-slate-400 cursor-pointer">Telegram</span>
-            <span className="hover:text-slate-400 cursor-pointer">GitBook Docs</span>
+            <a
+              href="https://x.com/pixelboyzai"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-cyan-400 transition-colors"
+            >
+              X (@pixelboyzai) ↗
+            </a>
+            <button onClick={() => navigate('/quests')} className="hover:text-slate-300 transition-colors">
+              Community Quests
+            </button>
+            <button onClick={() => navigate('/activity')} className="hover:text-slate-300 transition-colors">
+              Live Feed
+            </button>
+            <a
+              href={CONTRACT_CONFIG.bscScanUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-cyan-400 transition-colors"
+            >
+              BscScan ↗
+            </a>
           </div>
         </div>
       </div>
