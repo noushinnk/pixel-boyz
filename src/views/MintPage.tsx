@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -14,17 +14,19 @@ interface MintPageProps {
   navigate: (route: string) => void;
 }
 
-const X_CAMPAIGN_TEMPLATE = `PIXEL BOYZ is coming to BNB Chain!
+const X_CAMPAIGN_TEMPLATE = `JUST CLAIMED!
+PIXEL BOYZ is coming to Agent ID!
 
-10,000 unique NFTs.
-6,000 free mint allocation for verified Binance Agent ID holders.
-Forge, rewards and a pixel-powered Web3 ecosystem.
-
-Complete the campaign task and claim up to 2 free NFTs while allocation lasts.
+-Supply: 10,000
+-6,000 free mint for Binance #AgentID holders.
+-Forge
+-Rewards
+-TGE
+Complete the campaign task and claim up to 2 free NFTs & Be eligible for $1 cash rewards!
 
 https://www.pixelboyz.shop/mint
 
-#PIXELBOYZ #BNBChain #NFT @pixelboyzai`;
+#PIXELBOYZ #agenticwallet #NFT @pixelboyzai`;
 
 // Safe universal clipboard copy utility
 const copyTextSafely = async (text: string): Promise<boolean> => {
@@ -56,6 +58,7 @@ const copyTextSafely = async (text: string): Promise<boolean> => {
 
 export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
   const {
+    account,
     isConnected,
     connectWallet,
     totalMinted,
@@ -91,10 +94,18 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
 
   // X Campaign Card State
   const [xPostUrl, setXPostUrl] = useState<string>('');
+  const [rewardWalletAddress, setRewardWalletAddress] = useState<string>('');
   const [xVerificationMsg, setXVerificationMsg] = useState<string>('');
   const [xVerificationErr, setXVerificationErr] = useState<string>('');
+  const [rewardSubmissionLoading, setRewardSubmissionLoading] = useState<boolean>(false);
   const [copiedTemplate, setCopiedTemplate] = useState<boolean>(false);
   const [copiedPrompt, setCopiedPrompt] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (account) {
+      setRewardWalletAddress((current) => current || account);
+    }
+  }, [account]);
 
   // Preview character
   const previewNft = nfts[0];
@@ -128,23 +139,48 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
     window.open(`https://x.com/intent/tweet?text=${encoded}`, '_blank', 'noopener,noreferrer');
   };
 
-  // Submit & Verify X Post Handler (No Twitter API dependency)
+  // Verify the post link, then securely store its reward wallet entry.
   const handleVerifyXPost = async () => {
     if (!xPostUrl.trim()) {
       setXVerificationErr('Please paste your published X post URL.');
+      return;
+    }
+    if (!rewardWalletAddress.trim()) {
+      setXVerificationErr('Please enter the BNB wallet address for your reward entry.');
       return;
     }
     setXVerificationErr('');
     setXVerificationMsg('');
 
     const res = await verifyXCampaignPost(xPostUrl.trim());
-    if (res.success) {
-      setXVerificationMsg(res.message || 'X post verified successfully.');
+    if (!res.success) {
+      setXVerificationErr(res.error || 'Submission failed. Please check the URL format.');
+      return;
+    }
+
+    setRewardSubmissionLoading(true);
+    try {
+      const response = await fetch('/api/campaign/reward-entry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          postUrl: xPostUrl.trim(),
+          walletAddress: rewardWalletAddress.trim()
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Could not save your reward entry.');
+      }
+
+      setXVerificationMsg('Your X post and BNB wallet have been submitted for the reward draw.');
       try {
         confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
       } catch (e) { /* ignore */ }
-    } else {
-      setXVerificationErr(res.error || 'Submission failed. Please check the URL format.');
+    } catch (error: unknown) {
+      setXVerificationErr(error instanceof Error ? error.message : 'Could not save your reward entry.');
+    } finally {
+      setRewardSubmissionLoading(false);
     }
   };
 
@@ -534,13 +570,25 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                   Submit Your X Post Link
                 </label>
                 <p className="text-[11px] font-mono text-slate-400">
-                  Paste the public URL of your post if you want to participate in the optional campaign <span className="text-emerald-400 font-bold">(Wallet connection not required)</span>:
+                  1,000 minters will be randomly selected to receive $1 worth of BNB each. Submit your post link and the wallet you will use to mint:
                 </p>
                 <input
                   type="text"
                   placeholder="https://x.com/your_handle/status/123456789..."
                   value={xPostUrl}
                   onChange={(e) => setXPostUrl(e.target.value)}
+                  className="w-full rounded-xl border border-white/15 bg-black/50 px-3.5 py-2.5 font-mono text-xs text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
+                />
+                <label htmlFor="reward-wallet-address" className="font-mono text-xs font-bold uppercase tracking-wider text-white block">
+                  BNB Wallet Address for the Reward
+                </label>
+                <input
+                  id="reward-wallet-address"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="0x..."
+                  value={rewardWalletAddress}
+                  onChange={(e) => setRewardWalletAddress(e.target.value)}
                   className="w-full rounded-xl border border-white/15 bg-black/50 px-3.5 py-2.5 font-mono text-xs text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
                 />
 
@@ -563,16 +611,17 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                 )}
               </div>
 
+              <p className="rounded-lg border border-amber-400/30 bg-amber-950/30 p-3 text-[11px] font-mono text-amber-200">
+                You must follow <span className="font-bold">@pixelboyzai</span> on X to qualify for rewards. Follow status may be checked before rewards are sent.
+              </p>
               <button
                 onClick={handleVerifyXPost}
-                disabled={xCampaignLoading || !xPostUrl.trim()}
+                disabled={xCampaignLoading || rewardSubmissionLoading || !xPostUrl.trim() || !rewardWalletAddress.trim()}
                 className="w-full neon-button text-xs py-3 text-center disabled:opacity-50"
               >
-                {xCampaignLoading
-                  ? 'SUBMITTING POST LINK...'
-                  : xCampaignCompleted
-                  ? '✓ POST LINK SUBMITTED & VERIFIED'
-                  : 'SUBMIT OPTIONAL POST 🚀'}
+                {xCampaignLoading || rewardSubmissionLoading
+                  ? 'SUBMITTING REWARD ENTRY...'
+                  : 'SUBMIT FOR THE $1 BNB REWARD DRAW 🚀'}
               </button>
             </div>
 
