@@ -1,38 +1,70 @@
 import 'server-only';
-import { createClient } from '@supabase/supabase-js';
+import { Collection, MongoClient, MongoServerError } from 'mongodb';
+
+interface CampaignRewardEntry {
+  walletAddress: string;
+  xPostId: string;
+  xPostUrl: string;
+  createdAt: Date;
+}
 
 export class RewardEntryAlreadySubmittedError extends Error {}
 
 export class RewardDatabaseConfigurationError extends Error {}
+
+const mongoConnections = globalThis as typeof globalThis & {
+  campaignRewardMongoClientPromise?: Promise<MongoClient>;
+  campaignRewardCollectionPromise?: Promise<Collection<CampaignRewardEntry>>;
+};
+
+async function getRewardEntriesCollection() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new RewardDatabaseConfigurationError('MongoDB connection is not configured.');
+  }
+
+  const clientPromise = mongoConnections.campaignRewardMongoClientPromise ??= new MongoClient(uri).connect();
+  const collectionPromise = mongoConnections.campaignRewardCollectionPromise ??= clientPromise.then(
+    async (client) => {
+      const database = client.db(process.env.MONGODB_DATABASE || process.env.MONGODB_DB);
+      const collection = database.collection<CampaignRewardEntry>('campaign_reward_entries');
+      await collection.createIndexes([
+        { key: { walletAddress: 1 }, unique: true },
+        { key: { xPostId: 1 }, unique: true }
+      ]);
+      return collection;
+    }
+  );
+  try {
+    return await collectionPromise;
+  } catch (error: unknown) {
+    if (mongoConnections.campaignRewardMongoClientPromise === clientPromise) {
+      mongoConnections.campaignRewardMongoClientPromise = undefined;
+    }
+    if (mongoConnections.campaignRewardCollectionPromise === collectionPromise) {
+      mongoConnections.campaignRewardCollectionPromise = undefined;
+    }
+    throw error;
+  }
+}
 
 export async function saveCampaignRewardEntry(input: {
   walletAddress: string;
   postId: string;
   postUrl: string;
 }): Promise<void> {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new RewardDatabaseConfigurationError('Supabase server credentials are not configured.');
-  }
-
-  const supabase = createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
+  try {
+    const collection = await getRewardEntriesCollection();
+    await collection.insertOne({
+      walletAddress: input.walletAddress,
+      xPostId: input.postId,
+      xPostUrl: input.postUrl,
+      createdAt: new Date()
+    });
+  } catch (error: unknown) {
+    if (error instanceof MongoServerError && error.code === 11000) {
+      throw new RewardEntryAlreadySubmittedError('This wallet or X post has already been submitted.');
     }
-  });
-  const { error } = await supabase.from('campaign_reward_entries').insert({
-    wallet_address: input.walletAddress,
-    x_post_id: input.postId,
-    x_post_url: input.postUrl
-  });
-
-  if (error?.code === '23505') {
-    throw new RewardEntryAlreadySubmittedError('This wallet or X post has already been submitted.');
-  }
-  if (error) {
-    throw new Error(`Supabase could not save the reward entry (${error.code || 'unknown error'}).`);
+    throw error;
   }
 }
