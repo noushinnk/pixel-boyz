@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
+import Link from 'next/link';
+import { ArrowUpRight } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useWeb3 } from '../context/Web3Context';
 import { CONTRACT_CONFIG, isContractDeployed } from '../contracts/config';
@@ -54,8 +56,6 @@ const copyTextSafely = async (text: string): Promise<boolean> => {
 
 export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
   const {
-    account,
-    balanceBnb,
     isConnected,
     connectWallet,
     totalMinted,
@@ -80,7 +80,6 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
     verifyXCampaignPost,
     getAgenticPrompt,
     mintPixelBoyz,
-    is6kMinted,
     nfts
   } = useWeb3();
 
@@ -211,6 +210,13 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
             <p className="mt-2 text-sm text-slate-300 font-sans max-w-2xl">
               10,000 unique pixel warriors on BNB Smart Chain Mainnet. Live contract metrics, Binance Agent ID free allocation, and instant Merkle allowlist verification.
             </p>
+            <Link
+              href="/holder-benefits"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-emerald-300/40 bg-emerald-300/10 px-4 py-2.5 font-mono text-xs font-bold text-emerald-200 transition-colors hover:border-emerald-200 hover:bg-emerald-300/15"
+            >
+              HOLDER BENEFITS & TOKENOMICS
+              <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
+            </Link>
           </div>
 
           {/* Contract Status & BSCScan Link */}
@@ -632,51 +638,6 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
           {/* Right Column: Interactive Mint Terminal */}
           <div className="lg:col-span-7 space-y-6">
             <div className="rounded-3xl border border-cyan-400/30 bg-[#0d1226] p-6 sm:p-8 shadow-2xl">
-              
-              {/* Wallet Status Header */}
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 block">
-                    Connected Wallet
-                  </span>
-                  {isConnected ? (
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="font-mono text-sm font-semibold text-white">
-                        {account ? `${account.slice(0, 8)}...${account.slice(-6)}` : ''}
-                      </span>
-                      <span className="text-xs font-mono text-slate-400">
-                        ({balanceBnb} BNB)
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="font-mono text-sm text-slate-400 mt-0.5 block">
-                      Wallet not connected
-                    </span>
-                  )}
-                </div>
-
-                {!isConnected ? (
-                  <button
-                    onClick={() => connectWallet()}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-[#F0B90B] to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black px-3.5 py-2 font-mono text-xs font-black uppercase tracking-wider shadow-[0_0_15px_rgba(240,185,11,0.4)] hover:shadow-[0_0_25px_rgba(240,185,11,0.6)] hover:-translate-y-0.5 transition-all cursor-pointer"
-                  >
-                    <BinanceLogoSvg className="h-4 w-4 shrink-0 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
-                    <span>{!is6kMinted ? 'CONNECT BINANCE WALLET' : 'CONNECT WALLET'}</span>
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    {isFreeEligible ? (
-                      <span className="rounded-lg border border-cyan-400/40 bg-cyan-950/50 px-3 py-1 font-mono text-[11px] font-bold text-cyan-300">
-                        ✓ FREE MINT ELIGIBLE ({walletFreeRemaining} FREE)
-                      </span>
-                    ) : (
-                      <span className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-1 font-mono text-[11px] text-slate-400">
-                        STANDARD SALE
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
 
               {/* Quantity Selector */}
               <div className="mt-8 space-y-4">
@@ -797,7 +758,7 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
                     className="w-full flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-[#F0B90B] to-yellow-400 hover:from-amber-400 hover:to-yellow-300 py-4 font-mono text-sm font-black uppercase tracking-wider text-black shadow-[0_0_25px_rgba(240,185,11,0.45)] hover:shadow-[0_0_35px_rgba(240,185,11,0.7)] hover:-translate-y-0.5 transition-all cursor-pointer"
                   >
                     <BinanceLogoSvg className="h-5 w-5 shrink-0 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]" />
-                    <span>{!is6kMinted ? 'CONNECT BINANCE AGENTIC WALLET' : 'CONNECT WALLET (ALL WALLETS UNLOCKED)'}</span>
+                    <span>CONNECT WALLET</span>
                   </button>
                 ) : (
                   <button

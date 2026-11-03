@@ -382,49 +382,33 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Connect Injected Browser Wallet (ONLY Binance Agentic Wallet allowed until 6,000 free NFTs are minted)
+  // Connect a selected injected wallet provider.
   const connectWallet = async (preferredWallet?: string | unknown) => {
     setIsConnecting(true);
     try {
-      const is6kMinted = totalFreeMinted >= 6000 || freeAllocationRemaining <= 0 || freePhaseClosed;
       const walletKey = typeof preferredWallet === 'string' ? preferredWallet : undefined;
-
-      // Protocol Rule: user will not be allowed to connect any wallet (except binance agentic wallet) until the 6k nft is minted
-      if (!is6kMinted && walletKey && walletKey !== 'binance') {
-        alert('🚫 ACCESS RESTRICTED: During the 6,000 Free Mint phase, ONLY Binance Agentic Wallet is permitted to connect.\n\nAll other wallets (MetaMask, OKX, Trust Wallet, Coinbase) will be unlocked for public mint once all 6,000 free NFTs have been minted!');
-        return;
-      }
-
       const w = typeof window !== 'undefined' ? (window as any) : {};
-      let eth = w.ethereum;
+      const providers = Array.isArray(w.ethereum?.providers)
+        ? w.ethereum.providers
+        : [w.ethereum].filter(Boolean);
+      let eth;
 
-      if (!is6kMinted) {
-        // Enforce Binance Web3 / Agentic Wallet
-        const binanceProvider = w.binance || (eth?.providers ? eth.providers.find((p: any) => p.isBinance) : (eth?.isBinance ? eth : null));
-        if (!binanceProvider && !w.binance) {
-          alert('🚫 ONLY BINANCE AGENTIC WALLET PERMITTED:\n\nDuring the 6,000 Free Mint phase, only Binance Agentic Wallet is authorized to connect. Other wallets will unlock for public mint once all 6,000 free NFTs are minted.\n\nPlease connect with Binance Web3 / Agentic Wallet or copy the Agentic Wallet Mint Prompt to execute via your AI agent.');
-          return;
-        }
-        eth = binanceProvider || eth;
+      if (walletKey === 'binance') {
+        eth = w.binance || providers.find((provider: any) => provider.isBinance);
+      } else if (walletKey === 'metamask') {
+        eth = providers.find((provider: any) => provider.isMetaMask && !provider.isBinance);
+      } else if (walletKey === 'okx') {
+        eth = w.okxwallet || providers.find((provider: any) => provider.isOkxWallet);
+      } else if (walletKey === 'trust') {
+        eth = w.trustwallet || providers.find((provider: any) => provider.isTrust);
       } else {
-        if (eth?.providers?.length) {
-          if (walletKey === 'metamask') {
-            eth = eth.providers.find((p: any) => p.isMetaMask && !p.isBinance) || eth.providers[0];
-          } else if (walletKey === 'okx') {
-            eth = w.okxwallet || eth.providers.find((p: any) => p.isOkxWallet) || eth.providers[0];
-          } else if (walletKey === 'trust') {
-            eth = w.trustwallet || eth.providers.find((p: any) => p.isTrust) || eth.providers[0];
-          } else {
-            eth = eth.providers.find((p: any) => p.isMetaMask || p.isBinance) || eth.providers[0];
-          }
-        }
-        if (!eth) {
-          eth = w.binance || w.okxwallet || w.trustwallet || w.phantom?.ethereum;
-        }
+        eth = providers.find((provider: any) => provider.isMetaMask || provider.isBinance) || providers[0];
       }
+
+      eth = eth || providers[0] || w.binance || w.okxwallet || w.trustwallet || w.phantom?.ethereum;
 
       if (!eth || typeof eth.request !== 'function') {
-        alert('No Web3 wallet extension detected in this browser.\n\nPlease install Binance Web3 Wallet to connect to BNB Smart Chain, or copy the Agentic Wallet Mint Prompt to execute via your AI agent.');
+        alert('No compatible Web3 wallet was detected. Install or open a supported wallet and try again.');
         return;
       }
 

@@ -26,7 +26,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
     isConnected,
     isConnecting,
     isBinanceAgenticWallet,
-    is6kMinted,
     connectWallet,
     disconnectWallet,
     switchNetwork,
@@ -453,7 +452,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                         Binance Web3 / Agentic Wallet
                       </span>
                       <span className="rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 text-[9px] font-bold">
-                        AUTHORIZED
+                        SUPPORTED
                       </span>
                     </div>
                     <span className="text-[11px] text-slate-300 block mt-0.5">
@@ -469,18 +468,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
               {/* Option 2: MetaMask */}
               <button
                 onClick={() => {
-                  if (!is6kMinted) {
-                    alert('🚫 ACCESS RESTRICTED: During the 6,000 Free Mint phase, ONLY Binance Agentic Wallet is permitted.\n\nMetaMask and other standard wallets will be unlocked for public mint once all 6,000 free NFTs have been minted!');
-                    return;
-                  }
                   connectWallet('metamask');
                   setWalletModalOpen(false);
                 }}
-                className={`group flex items-center justify-between w-full rounded-2xl border p-3.5 transition-all text-xs text-left cursor-pointer ${
-                  !is6kMinted
-                    ? 'border-white/5 bg-white/[0.01] opacity-60 hover:opacity-80 hover:border-amber-500/30'
-                    : 'border-white/10 bg-white/[0.03] hover:border-orange-500/50 hover:bg-orange-500/5'
-                }`}
+                className="group flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 transition-all text-xs text-left cursor-pointer hover:border-orange-500/50 hover:bg-orange-500/5"
               >
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -491,37 +482,24 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                       <span className="font-bold text-white group-hover:text-orange-300 transition-colors block">
                         MetaMask
                       </span>
-                      {!is6kMinted && (
-                        <span className="rounded bg-slate-800 text-slate-400 border border-white/10 px-1.5 py-0.2 text-[9px] font-bold">
-                          LOCKED (UNTIL 6K MINTED)
-                        </span>
-                      )}
                     </div>
                     <span className="text-[11px] text-slate-400 block mt-0.5">
-                      {!is6kMinted ? 'Unlocks for public mint once 6,000 free NFTs are minted' : 'Browser Extension & Mobile Dapp Browser'}
+                      Browser Extension & Mobile Dapp Browser
                     </span>
                   </div>
                 </div>
                 <span className="text-slate-400 text-xs shrink-0 pl-2">
-                  {!is6kMinted ? '🔒 Locked' : 'Connect →'}
+                  Connect →
                 </span>
               </button>
 
               {/* Option 3: Trust Wallet */}
               <button
                 onClick={() => {
-                  if (!is6kMinted) {
-                    alert('🚫 ACCESS RESTRICTED: During the 6,000 Free Mint phase, ONLY Binance Agentic Wallet is permitted.\n\nTrust Wallet and other standard wallets will be unlocked for public mint once all 6,000 free NFTs have been minted!');
-                    return;
-                  }
                   connectWallet('trust');
                   setWalletModalOpen(false);
                 }}
-                className={`group flex items-center justify-between w-full rounded-2xl border p-3.5 transition-all text-xs text-left cursor-pointer ${
-                  !is6kMinted
-                    ? 'border-white/5 bg-white/[0.01] opacity-60 hover:opacity-80 hover:border-amber-500/30'
-                    : 'border-white/10 bg-white/[0.03] hover:border-blue-500/50 hover:bg-blue-500/5'
-                }`}
+                className="group flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 transition-all text-xs text-left cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/5"
               >
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -532,37 +510,24 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                       <span className="font-bold text-white group-hover:text-blue-300 transition-colors block">
                         Trust Wallet
                       </span>
-                      {!is6kMinted && (
-                        <span className="rounded bg-slate-800 text-slate-400 border border-white/10 px-1.5 py-0.2 text-[9px] font-bold">
-                          LOCKED (UNTIL 6K MINTED)
-                        </span>
-                      )}
                     </div>
                     <span className="text-[11px] text-slate-400 block mt-0.5">
-                      {!is6kMinted ? 'Unlocks for public mint once 6,000 free NFTs are minted' : 'Binance Official Partner Multi-Chain Wallet'}
+                      Binance Official Partner Multi-Chain Wallet
                     </span>
                   </div>
                 </div>
                 <span className="text-slate-400 text-xs shrink-0 pl-2">
-                  {!is6kMinted ? '🔒 Locked' : 'Connect →'}
+                  Connect →
                 </span>
               </button>
 
               {/* Option 4: OKX Wallet */}
               <button
                 onClick={() => {
-                  if (!is6kMinted) {
-                    alert('🚫 ACCESS RESTRICTED: During the 6,000 Free Mint phase, ONLY Binance Agentic Wallet is permitted.\n\nOKX Wallet and other standard wallets will be unlocked for public mint once all 6,000 free NFTs have been minted!');
-                    return;
-                  }
                   connectWallet('okx');
                   setWalletModalOpen(false);
                 }}
-                className={`group flex items-center justify-between w-full rounded-2xl border p-3.5 transition-all text-xs text-left cursor-pointer ${
-                  !is6kMinted
-                    ? 'border-white/5 bg-white/[0.01] opacity-60 hover:opacity-80 hover:border-amber-500/30'
-                    : 'border-white/10 bg-white/[0.03] hover:border-cyan-400/50 hover:bg-cyan-500/5'
-                }`}
+                className="group flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 transition-all text-xs text-left cursor-pointer hover:border-cyan-400/50 hover:bg-cyan-500/5"
               >
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -573,37 +538,24 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                       <span className="font-bold text-white group-hover:text-cyan-300 transition-colors block">
                         OKX Wallet
                       </span>
-                      {!is6kMinted && (
-                        <span className="rounded bg-slate-800 text-slate-400 border border-white/10 px-1.5 py-0.2 text-[9px] font-bold">
-                          LOCKED (UNTIL 6K MINTED)
-                        </span>
-                      )}
                     </div>
                     <span className="text-[11px] text-slate-400 block mt-0.5">
-                      {!is6kMinted ? 'Unlocks for public mint once 6,000 free NFTs are minted' : 'Multi-Chain Web3 & Smart Account Wallet'}
+                      Multi-Chain Web3 & Smart Account Wallet
                     </span>
                   </div>
                 </div>
                 <span className="text-slate-400 text-xs shrink-0 pl-2">
-                  {!is6kMinted ? '🔒 Locked' : 'Connect →'}
+                  Connect →
                 </span>
               </button>
 
               {/* Option 5: Any Injected Web3 / Browser Wallet */}
               <button
                 onClick={() => {
-                  if (!is6kMinted) {
-                    alert('🚫 ACCESS RESTRICTED: During the 6,000 Free Mint phase, ONLY Binance Agentic Wallet is permitted.\n\nStandard Web3 wallets will be unlocked for public mint once all 6,000 free NFTs have been minted!');
-                    return;
-                  }
                   connectWallet('injected');
                   setWalletModalOpen(false);
                 }}
-                className={`group flex items-center justify-between w-full rounded-2xl border p-3.5 transition-all text-xs text-left cursor-pointer ${
-                  !is6kMinted
-                    ? 'border-white/5 bg-white/[0.01] opacity-60 hover:opacity-80 hover:border-amber-500/30'
-                    : 'border-white/10 bg-white/[0.03] hover:border-purple-400/50 hover:bg-purple-500/5'
-                }`}
+                className="group flex items-center justify-between w-full rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 transition-all text-xs text-left cursor-pointer hover:border-purple-400/50 hover:bg-purple-500/5"
               >
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
@@ -614,32 +566,20 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRoute, navigate }) => {
                       <span className="font-bold text-white group-hover:text-purple-300 transition-colors block">
                         Coinbase / Injected Web3 Provider
                       </span>
-                      {!is6kMinted && (
-                        <span className="rounded bg-slate-800 text-slate-400 border border-white/10 px-1.5 py-0.2 text-[9px] font-bold">
-                          LOCKED (UNTIL 6K MINTED)
-                        </span>
-                      )}
                     </div>
                     <span className="text-[11px] text-slate-400 block mt-0.5">
-                      {!is6kMinted ? 'Unlocks for public mint once 6,000 free NFTs are minted' : 'EIP-1193 Compatible Wallets & Extensions'}
+                      EIP-1193 Compatible Wallets & Extensions
                     </span>
                   </div>
                 </div>
                 <span className="text-slate-400 text-xs shrink-0 pl-2">
-                  {!is6kMinted ? '🔒 Locked' : 'Connect →'}
+                  Connect →
                 </span>
               </button>
             </div>
 
-            {/* Protocol Notice regarding Free Mint & Public Mint Phase */}
-            <div className="mt-5 rounded-2xl border border-amber-500/30 bg-amber-950/20 p-3.5 text-[11px] text-slate-300 leading-normal space-y-1">
-              <div className="flex items-center gap-1.5 font-bold text-amber-300 uppercase">
-                <span>🛡️</span>
-                <span>AGENT FREE MINT ENFORCEMENT</span>
-              </div>
-              <p>
-                Until all 6,000 free NFTs are minted, <strong>ONLY Binance Agentic Wallet</strong> is authorized to connect. Once the 6,000 free allocation is completed, all other wallets (MetaMask, OKX, Trust Wallet, Coinbase) will automatically unlock for public minting!
-              </p>
+            <div className="mt-5 rounded-2xl border border-cyan-500/30 bg-cyan-950/20 p-3.5 text-[11px] text-slate-300 leading-normal">
+              Connect with any supported wallet. Agent ID verification is still required to claim an eligible free mint.
             </div>
           </div>
         </div>
