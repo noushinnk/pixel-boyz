@@ -21,6 +21,7 @@ import {
 import { createPublicClient, createWalletClient, custom, http, parseEther, formatEther } from 'viem';
 import { bsc } from 'viem/chains';
 import { ARCHETYPES, TRAIT_OPTIONS, INITIAL_NFTS, INITIAL_QUESTS } from '../data/collectionData';
+import { readApiResponse } from '../lib/client/readApiResponse';
 
 interface Web3ContextType {
   // Wallet State
@@ -276,18 +277,21 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ postUrl, walletAddress: account || undefined })
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const data = await readApiResponse(res);
+      if (res.ok && data.success === true) {
         setXCampaignCompleted(true);
         if (typeof window !== 'undefined') {
           localStorage.setItem('pb_x_campaign_completed', 'true');
         }
         await refreshContractData();
-        return { success: true, message: data.message };
+        return { success: true, message: typeof data.message === 'string' ? data.message : undefined };
       }
-      return { success: false, error: data.error || 'Verification failed' };
-    } catch (e: any) {
-      return { success: false, error: e.message || 'Network error' };
+      return {
+        success: false,
+        error: typeof data.error === 'string' ? data.error : 'Verification failed'
+      };
+    } catch (error: unknown) {
+      return { success: false, error: error instanceof Error ? error.message : 'Network error' };
     } finally {
       setXCampaignLoading(false);
     }

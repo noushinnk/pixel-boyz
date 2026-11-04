@@ -9,6 +9,7 @@ import { CONTRACT_CONFIG, isContractDeployed } from '../contracts/config';
 import { PixelBoyRenderer } from '../components/PixelBoyRenderer';
 import { PixelBoyNFT } from '../types/nft';
 import { BinanceLogoSvg } from '../components/WalletLogos';
+import { readApiResponse } from '../lib/client/readApiResponse';
 
 interface MintPageProps {
   navigate: (route: string) => void;
@@ -168,9 +169,11 @@ export const MintPage: React.FC<MintPageProps> = ({ navigate }) => {
           walletAddress: rewardWalletAddress.trim()
         })
       });
-      const data = await response.json();
+      const data = await readApiResponse(response);
       if (!response.ok) {
-        throw new Error(data.error || 'Could not save your reward entry.');
+        throw new Error(
+          typeof data.error === 'string' ? data.error : 'Could not save your reward entry.'
+        );
       }
 
       setXVerificationMsg('Your X post and BNB wallet have been submitted for the reward draw.');
