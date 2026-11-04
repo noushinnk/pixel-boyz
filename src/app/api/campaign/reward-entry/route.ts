@@ -46,7 +46,9 @@ export async function POST(request: Request) {
 
   try {
     await saveCampaignRewardEntry({
-      walletAddress: walletAddress.toLowerCase()
+      walletAddress: walletAddress.toLowerCase(),
+      postId,
+      postUrl: parsedPostUrl.toString()
     });
     return NextResponse.json({
       success: true,

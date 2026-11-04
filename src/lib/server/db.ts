@@ -71,6 +71,13 @@ export interface AdminAuditLog {
   timestamp: number;
 }
 
+export interface CampaignRewardWalletEntry {
+  wallet_address: string;
+  post_id?: string;
+  post_url?: string;
+  created_at: number;
+}
+
 interface DatabaseState {
   users: UserRecord[];
   wallet_sessions: WalletSession[];
@@ -80,6 +87,7 @@ interface DatabaseState {
   merkle_allowlist: MerkleAllowlistRecord[];
   mint_activity: MintActivityRecord[];
   admin_audit_logs: AdminAuditLog[];
+  reward_entries?: CampaignRewardWalletEntry[];
 }
 
 const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
@@ -391,6 +399,39 @@ class DatabaseService {
   public getAuditLogs(limit = 50): AdminAuditLog[] {
     this.init();
     return this.state.admin_audit_logs.slice(0, limit);
+  }
+
+  // Campaign Reward Entries
+  public getRewardEntryByWallet(walletAddress: string): CampaignRewardWalletEntry | null {
+    this.init();
+    const normalized = walletAddress.toLowerCase();
+    const list = this.state.reward_entries || [];
+    return list.find(e => e.wallet_address.toLowerCase() === normalized) || null;
+  }
+
+  public recordRewardEntry(data: {
+    wallet_address: string;
+    post_id?: string;
+    post_url?: string;
+  }): CampaignRewardWalletEntry {
+    this.init();
+    if (!this.state.reward_entries) {
+      this.state.reward_entries = [];
+    }
+    const normalized = data.wallet_address.toLowerCase();
+    const existing = this.getRewardEntryByWallet(normalized);
+    if (existing) {
+      return existing;
+    }
+    const record: CampaignRewardWalletEntry = {
+      wallet_address: normalized,
+      post_id: data.post_id,
+      post_url: data.post_url,
+      created_at: Date.now()
+    };
+    this.state.reward_entries.push(record);
+    this.persist();
+    return record;
   }
 
   public getMetrics() {
