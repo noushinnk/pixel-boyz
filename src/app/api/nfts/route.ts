@@ -4,7 +4,7 @@ import { bscPublicClient } from '@/lib/server/agentIdService';
 import { ARCHETYPES } from '@/data/collectionData';
 import { PixelBoyNFT, RarityTier } from '@/types/nft';
 
-export const revalidate = 15;
+export const revalidate = 0;
 
 interface CachedCollection {
   data: { contractAddress: string; totalMinted: number; nfts: PixelBoyNFT[]; updatedAt: number };
@@ -13,6 +13,7 @@ interface CachedCollection {
 
 let collectionCache: CachedCollection | null = null;
 const CACHE_TTL_MS = 20_000;
+const CACHE_HEADERS = { 'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30' };
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const RARITIES: RarityTier[] = ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic'];
 
@@ -136,15 +137,13 @@ export async function GET() {
   }
 
   if (collectionCache && now - collectionCache.timestamp < CACHE_TTL_MS) {
-    return NextResponse.json(collectionCache.data);
+    return NextResponse.json(collectionCache.data, { headers: CACHE_HEADERS });
   }
 
   try {
     const data = await fetchCollection();
     collectionCache = { data, timestamp: now };
-    return NextResponse.json(data, {
-      headers: { 'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30' }
-    });
+    return NextResponse.json(data, { headers: CACHE_HEADERS });
   } catch (error) {
     console.error('Error fetching live collection:', error);
     return NextResponse.json({ error: 'Unable to load on-chain NFTs' }, { status: 502 });
