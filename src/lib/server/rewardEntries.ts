@@ -1,70 +1,47 @@
 import 'server-only';
-import { Collection, MongoClient, MongoServerError } from 'mongodb';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
-interface CampaignRewardEntry {
-  walletAddress: string;
-  xPostId: string;
-  xPostUrl: string;
-  createdAt: Date;
+interface RewardAddressDatabase {
+  prepare(query: string): RewardAddressStatement;
+}
+
+interface RewardAddressStatement {
+  bind(walletAddress: string): RewardAddressStatement;
+  run(): Promise<{ meta?: { changes?: number } }>;
 }
 
 export class RewardEntryAlreadySubmittedError extends Error {}
 
 export class RewardDatabaseConfigurationError extends Error {}
 
-const mongoConnections = globalThis as typeof globalThis & {
-  campaignRewardMongoClientPromise?: Promise<MongoClient>;
-  campaignRewardCollectionPromise?: Promise<Collection<CampaignRewardEntry>>;
-};
-
-async function getRewardEntriesCollection() {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    throw new RewardDatabaseConfigurationError('MongoDB connection is not configured.');
+async function getRewardAddressDatabase() {
+  const { env } = await getCloudflareContext({ async: true });
+  const database = (env as unknown as Record<string, RewardAddressDatabase | undefined>)['PIXEL-BOYZ'];
+  if (!database) {
+    throw new RewardDatabaseConfigurationError('The PIXEL-BOYZ D1 binding is not configured.');
   }
-
-  const clientPromise = mongoConnections.campaignRewardMongoClientPromise ??= new MongoClient(uri).connect();
-  const collectionPromise = mongoConnections.campaignRewardCollectionPromise ??= clientPromise.then(
-    async (client) => {
-      const database = client.db(process.env.MONGODB_DATABASE || process.env.MONGODB_DB);
-      const collection = database.collection<CampaignRewardEntry>('campaign_reward_entries');
-      await collection.createIndexes([
-        { key: { walletAddress: 1 }, unique: true },
-        { key: { xPostId: 1 }, unique: true }
-      ]);
-      return collection;
-    }
-  );
-  try {
-    return await collectionPromise;
-  } catch (error: unknown) {
-    if (mongoConnections.campaignRewardMongoClientPromise === clientPromise) {
-      mongoConnections.campaignRewardMongoClientPromise = undefined;
-    }
-    if (mongoConnections.campaignRewardCollectionPromise === collectionPromise) {
-      mongoConnections.campaignRewardCollectionPromise = undefined;
-    }
-    throw error;
-  }
+  return database;
 }
 
 export async function saveCampaignRewardEntry(input: {
   walletAddress: string;
-  postId: string;
-  postUrl: string;
 }): Promise<void> {
-  try {
-    const collection = await getRewardEntriesCollection();
-    await collection.insertOne({
-      walletAddress: input.walletAddress,
-      xPostId: input.postId,
-      xPostUrl: input.postUrl,
-      createdAt: new Date()
-    });
-  } catch (error: unknown) {
-    if (error instanceof MongoServerError && error.code === 11000) {
-      throw new RewardEntryAlreadySubmittedError('This wallet or X post has already been submitted.');
-    }
-    throw error;
+  const database = await getRewardAddressDatabase();
+  await database
+    .prepare(`
+      CREATE TABLE IF NOT EXISTS reward_wallet_addresses (
+        wallet_address TEXT PRIMARY KEY,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+    .run();
+
+  const result = await database
+    .prepare('INSERT OR IGNORE INTO reward_wallet_addresses (wallet_address) VALUES (?)')
+    .bind(input.walletAddress.toLowerCase())
+    .run();
+
+  if (result.meta?.changes === 0) {
+    throw new RewardEntryAlreadySubmittedError('This wallet has already been submitted.');
   }
 }

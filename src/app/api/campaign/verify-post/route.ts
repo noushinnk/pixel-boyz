@@ -46,7 +46,6 @@ export async function POST(req: Request) {
       postUrl: result.postUrl,
       authorId: result.authorId,
       authorUsername: result.authorUsername,
-      submission: result.submission,
       message: 'X campaign post verified successfully! Free mint eligibility unlocked.'
     });
   } catch (error: any) {
